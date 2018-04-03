@@ -20,7 +20,7 @@ def merge_bounding_boxes(bounding_boxes):
     # Sort by size
     sorted_boxes = sorted(bounding_boxes, key=lambda x: x.size, reverse=False)
 
-    # Test merge from smallest to largest
+    # Merge from smallest to largest
     idx = 0
     while idx < len(sorted_boxes):
         box = sorted_boxes.pop(idx)
@@ -35,11 +35,50 @@ def merge_bounding_boxes(bounding_boxes):
     return sorted_boxes
 
 
-def get_bounding_boxes(bounding_box_vals):
-    bounding_boxes = [BoundingBox(bounding_box_val) for bounding_box_val in bounding_box_vals]
+def eval_letter_width(bounding_boxes):
+    widths = [box.w for box in bounding_boxes]
+    average = np.average(widths)
+    variance = np.var(widths)
+    n = len(widths)
+    tolerance = 4 # Higher for more tolerance over outliers
+    filtered_widths = [width for width in widths if -tolerance <= (width - average)/np.sqrt(variance/n) <= tolerance]
+    return np.max(filtered_widths)
+
+
+def combine_horizontally(bounding_boxes, evaled_letter_width):
+    # Sort by position
+    sorted_boxes = sorted(bounding_boxes, key=lambda x: x.x, reverse=False)
+
+    idx = 0
+    while idx < len(sorted_boxes)-1:
+        box = sorted_boxes[idx]
+        next_box = sorted_boxes[idx+1]
+        combined = BoundingBox.combine(box, next_box)
+
+        combined_max_width = evaled_letter_width * 1.1
+
+        if combined.w < combined_max_width:
+            sorted_boxes.pop(idx)
+            sorted_boxes.pop(idx)
+            sorted_boxes.insert(idx, combined)
+        else:
+            idx += 1
+
+    return sorted_boxes
+
+
+def get_bounding_boxes(bounding_box_vals, w, h):
+    # bounding_boxes = [BoundingBox(bounding_box_val) for bounding_box_val in bounding_box_vals]
+    bounding_boxes = [BoundingBox((bounding_box_val[0], 0, bounding_box_val[2], h)) for bounding_box_val in bounding_box_vals]
 
     # Merge bounding boxes
     bounding_boxes = merge_bounding_boxes(bounding_boxes)
+
+    # Evaluate letter width
+    evaled_letter_width = eval_letter_width(bounding_boxes)
+
+    # Combine bounding boxes that intersect but combined width is around letter width
+    bounding_boxes = combine_horizontally(bounding_boxes, evaled_letter_width)
 
     return bounding_boxes
 
@@ -54,6 +93,14 @@ class BoundingBox(object):
                self.y >= other.y and\
                self.x + self.w <= other.x + other.w and\
                self.y + self.h <= other.y + other.h
+
+    @staticmethod
+    def combine(b1, b2):
+        x = min(b1.x, b2.x)
+        y = min(b1.y, b2.y)
+        w = max(b1.x + b1.w, b2.x + b2.w) - x
+        h = max(b1.y + b1.h, b2.y + b2.h) - y
+        return BoundingBox((x, y, w, h))
 
 
 def test(im_name):
@@ -96,7 +143,7 @@ def test(im_name):
             break
 
     # Merge bounding boxes and write to output_image, crop and save images.
-    bounding_boxes = get_bounding_boxes(bounding_box_vals)
+    bounding_boxes = get_bounding_boxes(bounding_box_vals, im.shape[1], im.shape[0])
     for index, bounding_box in enumerate(bounding_boxes):
         x, y, w, h = bounding_box.x, bounding_box.y, bounding_box.w, bounding_box.h
         cv2.imwrite(cropped_result_path('box_piece_{}.png'.format(index)), output_image[y: y + h, x: x + w])
