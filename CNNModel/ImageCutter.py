@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import os
+import sys
 
 IMG_PATH = './trainingImages'
 CROP_RESULT_PATH = 'cropedResults'
@@ -55,9 +56,13 @@ class BoundingBox(object):
                self.y + self.h <= other.y + other.h
 
 
-def test():
+def test(im_name):
+    # Check if is valid path
+    if not os.path.isfile(training_img_path(im_name)):
+        raise Exception('Invalid file path.')
+
     # Read img
-    im = cv2.imread(training_img_path('line_5.png'))
+    im = cv2.imread(training_img_path(im_name))
     output_image = np.array(im, copy=True)
 
     # Convert Color to white and black
@@ -101,4 +106,11 @@ def test():
     cv2.imwrite(training_img_path('out_boxed.png'), output_image)
 
 
-test()
+if len(sys.argv) > 1:
+    im_name = sys.argv[1]
+    try:
+        test(im_name)
+    except Exception as e:
+        print(str(e))
+else:
+    print('Usage: \npython ImageCutter.py {filename}')
