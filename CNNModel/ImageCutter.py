@@ -55,7 +55,7 @@ def combine_horizontally(bounding_boxes, evaled_letter_width):
         next_box = sorted_boxes[idx+1]
         combined = BoundingBox.combine(box, next_box)
 
-        combined_max_width = evaled_letter_width * 1.1
+        combined_max_width = evaled_letter_width * 1.2
 
         if combined.w < combined_max_width:
             sorted_boxes.pop(idx)
@@ -103,6 +103,16 @@ class BoundingBox(object):
         return BoundingBox((x, y, w, h))
 
 
+def add_border(im):
+    row, col= im.shape[:2]
+    bottom= im[row-2:row, 0:col]
+
+    bordersize=1
+    border=cv2.copyMakeBorder(im, top=bordersize, bottom=bordersize, left=bordersize, right=bordersize, borderType= cv2.BORDER_CONSTANT, value=[255, 255, 255])
+
+    return border
+
+
 def test(im_name):
     # Check if is valid path
     if not os.path.isfile(training_img_path(im_name)):
@@ -110,6 +120,7 @@ def test(im_name):
 
     # Read img
     im = cv2.imread(training_img_path(im_name))
+    im = add_border(im)
     output_image = np.array(im, copy=True)
 
     # Convert Color to white and black
