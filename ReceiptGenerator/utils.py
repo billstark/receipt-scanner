@@ -1,6 +1,6 @@
 import os
 import random
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 def rand_int_range(start, end):
     return random.randrange(start, end)
