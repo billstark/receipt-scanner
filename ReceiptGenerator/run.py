@@ -29,6 +29,7 @@ def create_config():
         'num_row_prefix_2': random.choice(range(0, 5)),
         'num_row_suffix': random.choice(range(0, 4)),
         'num_row_suffix_2': random.choice(range(1, 5)),
+        'blur': random.choice(range(0, 5)),
     }
     return config
 
@@ -149,7 +150,7 @@ def add_shadow(img):
 
 
 def add_waterdrops(img):
-    waterdrop_count = rand_int_range(0, 4)
+    waterdrop_count = rand_int_range(0, 10)
     layers = []
     for _ in range(waterdrop_count):
         radius = rand_int_range(40, 80)
@@ -186,6 +187,7 @@ def draw_receipt():
     num_row_prefix_2 = config['num_row_prefix_2']
     num_row_suffix = config['num_row_suffix']
     num_row_suffix_2 = config['num_row_suffix_2']
+    blur = config['blur']
     item_list = create_item_list(start=item_count_min, end=item_count_max, uppercase_policy=item_name_uppercase_policy, currency_mark=currency_mark, currency_side=currency_side, price_min=price_min, price_max=price_max)
     items = item_list['items']
     items_text = items_to_text(items, num_col, dist_name_price, item_space_count, break_long_words)
@@ -225,6 +227,9 @@ def draw_receipt():
 
     # Add waterdrops
     img = add_waterdrops(img)
+
+    # Blur
+    img = img.filter(ImageFilter.GaussianBlur(radius=blur))
 
     # Save for further processing
     img.save(directory + '/image_shadow.png', 'png')
