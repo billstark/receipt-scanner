@@ -2,11 +2,11 @@
 
 > ### Install:
 > Download or Clone repo;  
-> In terminal, in repo directory:  
+> In terminal, in ReceiptGenerator directory:  
 > `pip install -r requirements.txt`
 ---
 > ### Usage:
-> In terminal, in repo directory:
+> In terminal, in ReceiptGenerator directory:
 
 
 > `python run.py {N}`  
