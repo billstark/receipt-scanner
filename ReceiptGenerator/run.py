@@ -144,38 +144,6 @@ def shadow_outline(shadow_part, size):
         return [bottomright(), bottomleft(), (0, (bottom() + hh)/2), (w, (bottom() + hh)/2)]
 
 
-def add_shadow(img):
-    parts = [(1), (2), (3), (4), (1, 2), (1, 4), (2, 3), (3, 4)]
-    random.shuffle(parts)
-    shadow_count = rand_int_range(0, 4)
-    shadow_parts = parts[:shadow_count]
-    layers = []
-    for shadow_part in shadow_parts:
-        layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
-        layer_drawer = ImageDraw.Draw(layer)
-        layer_drawer.polygon(shadow_outline(shadow_part, img.size), fill=shadow_tpl())
-        del layer_drawer
-        layers.append(layer)
-
-    return functools.reduce(Image.alpha_composite, layers, img)
-
-
-def add_waterdrops(img):
-    waterdrop_count = rand_int_range(0, 10)
-    layers = []
-    for _ in range(waterdrop_count):
-        radius = rand_int_range(40, 80)
-        center = (rand_int_range(0, img.size[0]), rand_int_range(0, img.size[1]))
-        layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
-        layer_drawer = ImageDraw.Draw(layer)
-        layer_drawer.ellipse([(center[0] - radius, center[1] - radius), (center[0] + radius, center[1] + radius)], fill=shadow_tpl())
-        del layer_drawer
-        layers.append(layer)
-
-    return functools.reduce(Image.alpha_composite, layers, img)
-
-
-
 def draw_receipt():
     config = create_config()
     item_count_min = 2
@@ -232,12 +200,6 @@ def draw_receipt():
 
     # Save original
     img.save(directory + '/image.png', 'png')
-
-    # Add shadow
-    # img = add_shadow(img)
-
-    # Add waterdrops
-    # img = add_waterdrops(img)
 
     # Blur
     img = img.filter(ImageFilter.GaussianBlur(radius=blur))
