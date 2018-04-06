@@ -31,7 +31,7 @@ def create_config():
         'num_row_prefix_2': random.choice(range(0, 5)),
         'num_row_suffix': random.choice(range(0, 4)),
         'num_row_suffix_2': random.choice(range(1, 5)),
-        'blur': random.choice(range(0, 4)),
+        'blur': random.choice(range(0, 3)),
     }
     return config
 
