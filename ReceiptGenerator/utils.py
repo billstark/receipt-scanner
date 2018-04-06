@@ -3,7 +3,7 @@ import random
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 def rand_int_range(start, end):
-    return random.randrange(start, end)
+    return random.randint(int(start), int(end))
 
 
 def white_color_tpl():

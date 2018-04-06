@@ -1,12 +1,14 @@
 import sys
 from utils import *
 from items_creator import create_item_list
+import math
 import shutil
 import textwrap
 import json
 import datetime
 import time
 import Augmentor
+import functools
 
 
 def create_config():
@@ -29,7 +31,7 @@ def create_config():
         'num_row_prefix_2': random.choice(range(0, 5)),
         'num_row_suffix': random.choice(range(0, 4)),
         'num_row_suffix_2': random.choice(range(1, 5)),
-        'blur': random.choice(range(0, 5)),
+        'blur': random.choice(range(0, 4)),
     }
     return config
 
@@ -59,7 +61,7 @@ def create_separator_line(seperator, num_col):
 
 
 def create_decor_text_lines(num_col, num_row):
-    return [rand_seq(max_length=random.choice(range((num_col)/4, num_col))) for _ in range(num_row)]
+    return [rand_seq(max_length=random.choice(range((num_col)//4, num_col))) for _ in range(num_row)]
 
 def create_centered_text(num_col, num_row):
     lines = [line.center(num_col, ' ') for line in create_decor_text_lines(num_col, num_row)]
@@ -74,7 +76,17 @@ def draw_text(text, margin_hori, margin_vert):
     drawer = ImageDraw.Draw(img)
     fnt = ImageFont.truetype(pick_resource('fonts'), 40)
     textsize = drawer.textsize(text, font=fnt)
-    img = Image.new('RGBA', (2*margin_hori+textsize[0], 2*margin_vert+textsize[1]), white_color_tpl())
+    width = 2*margin_hori+textsize[0]
+    height = 2*margin_vert+textsize[1]
+    img = Image.open(pick_resource('paper-texture'), 'r')
+    img_w, img_h = img.size
+    scale = max((width * 1.0 / img_w), (height * 1.0 / img_h))
+    img = img.resize((int(math.ceil(scale * img_w)), int(math.ceil(scale * img_h))), Image.ANTIALIAS)
+    img_w, img_h = img.size
+    x = rand_int_range(0, img_w - width)
+    y = rand_int_range(0, img_h - height)
+    img = img.crop((x, y, x + width, y + height))
+    img = img.convert('RGBA')
     drawer = ImageDraw.Draw(img)
     drawer.text((margin_hori, margin_vert), text, font=fnt, fill=black_color_tpl())
     return img, drawer
@@ -83,7 +95,6 @@ def draw_text(text, margin_hori, margin_vert):
 def add_img_to_canvas(path, dest):
     img = Image.open(path, 'r')
     img_w, img_h = img.size
-    # bg_w, bg_h = img_w + rand_int_range(50, 300), img_h + rand_int_range(50, 300)
     bg_w, bg_h = int(img_w * 1.5), int(img_h * 1.5)
     background = Image.open(pick_resource('background'), 'r')
     background = background.resize((bg_w, bg_h), Image.ANTIALIAS)
@@ -131,38 +142,6 @@ def shadow_outline(shadow_part, size):
         return [bottomleft(), topleft(), (left()/2, 0), (left()/2, h)]
     elif shadow_part == (3, 4):
         return [bottomright(), bottomleft(), (0, (bottom() + hh)/2), (w, (bottom() + hh)/2)]
-
-
-def add_shadow(img):
-    parts = [(1), (2), (3), (4), (1, 2), (1, 4), (2, 3), (3, 4)]
-    random.shuffle(parts)
-    shadow_count = rand_int_range(0, 4)
-    shadow_parts = parts[:shadow_count]
-    layers = []
-    for shadow_part in shadow_parts:
-        layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
-        layer_drawer = ImageDraw.Draw(layer)
-        layer_drawer.polygon(shadow_outline(shadow_part, img.size), fill=shadow_tpl())
-        del layer_drawer
-        layers.append(layer)
-
-    return reduce(Image.alpha_composite, layers, img)
-
-
-def add_waterdrops(img):
-    waterdrop_count = rand_int_range(0, 10)
-    layers = []
-    for _ in range(waterdrop_count):
-        radius = rand_int_range(40, 80)
-        center = (rand_int_range(0, img.size[0]), rand_int_range(0, img.size[1]))
-        layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
-        layer_drawer = ImageDraw.Draw(layer)
-        layer_drawer.ellipse([(center[0] - radius, center[1] - radius), (center[0] + radius, center[1] + radius)], fill=shadow_tpl())
-        del layer_drawer
-        layers.append(layer)
-
-    return reduce(Image.alpha_composite, layers, img)
-
 
 
 def draw_receipt():
@@ -221,12 +200,6 @@ def draw_receipt():
 
     # Save original
     img.save(directory + '/image.png', 'png')
-
-    # Add shadow
-    img = add_shadow(img)
-
-    # Add waterdrops
-    img = add_waterdrops(img)
 
     # Blur
     img = img.filter(ImageFilter.GaussianBlur(radius=blur))
