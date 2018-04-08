@@ -31,7 +31,7 @@ def create_config():
         'num_row_prefix_2': random.choice(range(0, 5)),
         'num_row_suffix': random.choice(range(0, 4)),
         'num_row_suffix_2': random.choice(range(1, 5)),
-        'blur': random.choice(range(0, 4)),
+        'blur': random.choice(range(0, 3)),
     }
     return config
 
@@ -143,7 +143,6 @@ def shadow_outline(shadow_part, size):
     elif shadow_part == (3, 4):
         return [bottomright(), bottomleft(), (0, (bottom() + hh)/2), (w, (bottom() + hh)/2)]
 
-
 def draw_receipt():
     config = create_config()
     item_count_min = 2
@@ -230,14 +229,9 @@ def draw_receipt():
     item_f.close()
 
 
-def show_count():
-    print(str(len([x for x in os.listdir('results') if 'DS_Store' not in x])) + ' objects currently.')
-
-
 def create_sample(count):
     for i in range(count):
         draw_receipt()
-        show_count()
         print('{} more job(s) remain'.format(count - i - 1))
 
 
