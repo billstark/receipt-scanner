@@ -1,5 +1,6 @@
 /CNNModel/trainingImages/*
 /CNNModel/CNN/image-data
+/CNNModel/CNN/saved-model
 env
 *.pyc
 ReceiptGenerator/results
