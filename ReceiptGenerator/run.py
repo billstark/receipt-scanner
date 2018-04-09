@@ -204,10 +204,10 @@ def draw_receipt():
     img = img.filter(ImageFilter.GaussianBlur(radius=blur))
 
     # Save for further processing
-    img.save(directory + '/image_shadow.png', 'png')
+    img.save(directory + '/image_blur.png', 'png')
 
     # Add background
-    add_img_to_canvas(directory + '/image_shadow.png', directory + '/back')
+    add_img_to_canvas(directory + '/image_blur.png', directory + '/back')
 
     # Distort
     pipeline = Augmentor.Pipeline(directory + '/back')
