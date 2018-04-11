@@ -1,3 +1,4 @@
+import numpy as np
 import cv2
 import sys
 from utils import *
@@ -260,7 +261,6 @@ def draw_receipt_with_letter_boxes(debug=False):
         save_cv2_image(line, directory + '/lines/line_{}.png'.format(idx))
 
     # Cut letters
-    letters = []
     letter_boxes = []
     os.makedirs(directory + '/letters')
     for line_idx, line in enumerate(lines):
@@ -268,8 +268,15 @@ def draw_receipt_with_letter_boxes(debug=False):
         letters, boxes = cut_letters(line)
         for letter_idx, letter in enumerate(letters):
             save_cv2_image(letter, directory + '/letters/line_{}_letter_{}.png'.format(line_idx, letter_idx))
-            boxes = [(box[0] + line_box[0], box[1] + line_box[1], box[2], box[3]) for box in boxes]
-            letter_boxes += boxes
+        boxes = [(box[0] + line_box[0], box[1] + line_box[1], box[2], box[3]) for box in boxes]
+        letter_boxes += boxes
+
+    if debug:
+        back = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        for rect in letter_boxes:
+            back = cv2.rectangle(back, (rect[0], rect[1]), (rect[0]+rect[2], rect[1]+rect[3]), (255, 0, 0))
+        cv2.imshow('letters', back)
+        cv2.waitKey(0)
 
     return img, letter_boxes
 
@@ -277,7 +284,7 @@ def draw_receipt_with_letter_boxes(debug=False):
 
 def create_sample(count):
     for i in range(count):
-        draw_receipt_with_letter_boxes()
+        draw_receipt_with_letter_boxes(debug=True)
         print('{} more job(s) remain'.format(count - i - 1))
 
 
