@@ -1,89 +1,43 @@
-import cv2
+from pyimagesearch.transform import four_point_transform
+from skimage.filters import threshold_local
 import numpy as np
-import rect
+import argparse
+import cv2
+import imutils
 
-image = cv2.imread('test-images/receipt.jpg')
+def scan(image):
+    # Compute the ratio of the old height to the new height, clone it, and resize it
+    ratio = image.shape[0] / 500.0
+    orig = image.copy()
+    image = imutils.resize(image, height = 500)
 
-# Resizing will make results better. Why?????
-image = cv2.resize(image, (1500, 880))
+    # Grayscale, blur, and find edges in the image
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
+    edged = cv2.Canny(gray, 75, 200)
 
+    # Find the contours, keep the largest ones, and initialize the screen contour
+    cnts = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = cnts[0] if imutils.is_cv2() else cnts[1]
+    cnts = sorted(cnts, key = cv2.contourArea, reverse = True)[:5]
 
-orig = image.copy()
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-kernel = np.ones((3, 3), np.uint8)
-dilated = cv2.dilate(blurred, kernel, iterations=1)
-edged = cv2.Canny(dilated, 0, 50)
-orig_edged = edged.copy()
+    # loop over the contours
+    for c in cnts:
+        # approximate the contour
+        peri = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, 0.02 * peri, True)
 
-# find the contours in the edged image, keeping only the
-# largest ones, and initialize the screen contour
-_, contours, _ = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-contours = sorted(contours, key=cv2.contourArea, reverse=True)
-print(cv2.contourArea(contours[0]))
-cv2.drawContours(image, [contours[0]], -1, (0, 255, 0), 2)
+        # if contour has four points, can assume that it is the bounds
+        if len(approx) == 4:
+            screen_cnt = approx
+            break
 
-#x,y,w,h = cv2.boundingRect(contours[0])
-#cv2.rectangle(image,(x,y),(x+w,y+h),(0,0,255),0)
+    # Four point transform
+    warped = four_point_transform(orig, screen_cnt.reshape(4, 2) * ratio)
 
-# get approximate contour
-for c in contours:
-    p = cv2.arcLength(c, True)
-    approx = cv2.approxPolyDP(c, 0.02 * p, True)
+    # # Grayscale, 'black and white' paper effect
+    # warped = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
+    # threahold = threshold_local(warped, 11, offset = 10, method = "gaussian")
+    # warped = (warped > threahold).astype("uint8") * 255
 
-    # If there are 4 sides. (Can it be improved here???)
-    if len(approx) == 4:
-        target = approx
-        print(cv2.contourArea(c))
-        break
-
-
-# mapping target points to 800x800 quadrilateral
-approx = rect.rectify(target)
-pts2 = np.float32([[0,0],[800,0],[800,800],[0,800]])
-
-M = cv2.getPerspectiveTransform(approx,pts2)
-dst = cv2.warpPerspective(orig,M,(800,800))
-
-cv2.drawContours(image, [target], -1, (0, 255, 0), 2)
-dst = cv2.cvtColor(dst, cv2.COLOR_BGR2GRAY)
-
-
-# using thresholding on warped image to get scanned effect (If Required)
-ret,th1 = cv2.threshold(dst,127,255,cv2.THRESH_BINARY)
-th2 = cv2.adaptiveThreshold(dst,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
-            cv2.THRESH_BINARY,11,2)
-th3 = cv2.adaptiveThreshold(dst,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
-            cv2.THRESH_BINARY,11,2)
-ret2,th4 = cv2.threshold(dst,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-
-
-# cv2.imshow("Original.jpg", orig)
-# cv2.imshow("Original Gray.jpg", gray)
-# cv2.imshow("Original Blurred.jpg", blurred)
-cv2.imshow("Original Edged.jpg", orig_edged)
-cv2.imshow("Outline.jpg", image)
-# cv2.imshow("Thresh Binary.jpg", th1)
-# cv2.imshow("Thresh mean.jpg", th2)
-# cv2.imshow("Thresh gauss.jpg", th3)
-# cv2.imshow("Otsu's.jpg", th4)
-cv2.imshow("dst.jpg", dst)
-
-# other thresholding methods
-"""
-ret,thresh1 = cv2.threshold(dst,127,255,cv2.THRESH_BINARY)
-ret,thresh2 = cv2.threshold(dst,127,255,cv2.THRESH_BINARY_INV)
-ret,thresh3 = cv2.threshold(dst,127,255,cv2.THRESH_TRUNC)
-ret,thresh4 = cv2.threshold(dst,127,255,cv2.THRESH_TOZERO)
-ret,thresh5 = cv2.threshold(dst,127,255,cv2.THRESH_TOZERO_INV)
-
-cv2.imshow("Thresh Binary", thresh1)
-cv2.imshow("Thresh Binary_INV", thresh2)
-cv2.imshow("Thresh Trunch", thresh3)
-cv2.imshow("Thresh TOZERO", thresh4)
-cv2.imshow("Thresh TOZERO_INV", thresh5)
-"""
-
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
+    return warped

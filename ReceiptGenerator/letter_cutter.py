@@ -3,17 +3,6 @@ import cv2
 import os
 import sys
 
-IMG_PATH = './trainingImages'
-CROP_RESULT_PATH = 'cropedResults'
-
-def training_img_path(img_name):
-    return os.path.join(IMG_PATH, img_name)
-
-
-def cropped_result_path(img_name):
-    return os.path.join(IMG_PATH, CROP_RESULT_PATH, img_name)
-
-
 def merge_bounding_boxes(bounding_boxes):
     # Algo to be improved for better performance
 
@@ -24,7 +13,7 @@ def merge_bounding_boxes(bounding_boxes):
     idx = 0
     while idx < len(sorted_boxes):
         box = sorted_boxes.pop(idx)
-        for t_idx, target in enumerate(sorted_boxes):
+        for target in sorted_boxes:
             if box.is_inside(target):
                 box = None
                 break
@@ -39,9 +28,18 @@ def eval_letter_width(bounding_boxes):
     widths = [box.w for box in bounding_boxes]
     average = np.average(widths)
     variance = np.var(widths)
+    if variance == 0:
+        return widths[0]
     n = len(widths)
     tolerance = 4 # Higher for more tolerance over outliers
-    filtered_widths = [width for width in widths if -tolerance <= (width - average)/np.sqrt(variance/n) <= tolerance]
+    filtered_widths = []
+    while True:
+        filtered_widths = [width for width in widths if -tolerance <= (width - average)/np.sqrt(variance/n) <= tolerance]
+        if not filtered_widths:
+            tolerance *= 1.5
+            print tolerance, widths
+        else:
+            break
     return np.max(filtered_widths)
 
 
@@ -103,72 +101,43 @@ class BoundingBox(object):
         return BoundingBox((x, y, w, h))
 
 
-def add_border(im):
-    row, col= im.shape[:2]
-    bottom= im[row-2:row, 0:col]
-
+def add_border(image):
     bordersize=1
-    border=cv2.copyMakeBorder(im, top=bordersize, bottom=bordersize, left=bordersize, right=bordersize, borderType= cv2.BORDER_CONSTANT, value=[255, 255, 255])
+    border=cv2.copyMakeBorder(image, top=bordersize, bottom=bordersize, left=bordersize, right=bordersize, borderType= cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
     return border
 
 
-def test(im_name):
-    # Check if is valid path
-    if not os.path.isfile(training_img_path(im_name)):
-        raise Exception('Invalid file path.')
-
-    # Read img
-    im = cv2.imread(training_img_path(im_name))
-    im = add_border(im)
-    output_image = np.array(im, copy=True)
+def cut_letters(image):
+    image = add_border(image)
+    output_image = np.array(image, copy=True)
 
     # Convert Color to white and black
-    imgary = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    imgary = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Add contrast
     _, thresh = cv2.threshold(imgary, 0, 255, cv2.THRESH_OTSU)
     # _, thresh = cv2.threshold(imgary, 127, 255, cv2.THRESH_BINARY)
-    cv2.imwrite(training_img_path('out_thresh.png'), thresh)
 
     # Find contour
     _, contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Draw contoured img
-    image_contoured = cv2.drawContours(output_image, contours, -1, (0, 255, 0), 1)
-    cv2.imwrite(training_img_path('out_contour.png'), image_contoured)
-
-    # # Find and draw bounding rects for all contours
-    # for index, contour in enumerate(contours):
-    #     x, y, w, h = cv2.boundingRect(contour)
-    #     cv2.imwrite(cropped_result_path('contour_piece_{}.png'.format(index)), output_image[y: y + h, x: x + w])
-    #     output_image = cv2.rectangle(output_image, (x, y), (x + w, y + h), (0, 255, 0), 1)
 
     # Get bounding boxes
     bounding_box_vals = [cv2.boundingRect(contour) for contour in contours]
 
     # Remove the one with same size as image
     for idx, val in enumerate(bounding_box_vals):
-        if val[0] == 0 and val[1] == 0 and val[2] == im.shape[1] and val[3] == im.shape[0]:
+        if val[0] == 0 and val[1] == 0 and val[2] == image.shape[1] and val[3] == image.shape[0]:
             bounding_box_vals.pop(idx)
             break
 
     # Merge bounding boxes and write to output_image, crop and save images.
-    bounding_boxes = get_bounding_boxes(bounding_box_vals, im.shape[1], im.shape[0])
-    for index, bounding_box in enumerate(bounding_boxes):
+    bounding_boxes = get_bounding_boxes(bounding_box_vals, image.shape[1], image.shape[0])
+    letters = []
+    boxes = []
+    for bounding_box in bounding_boxes:
         x, y, w, h = bounding_box.x, bounding_box.y, bounding_box.w, bounding_box.h
-        cv2.imwrite(cropped_result_path('box_piece_{}.png'.format(index)), output_image[y: y + h, x: x + w])
-        output_image = cv2.rectangle(output_image, (x, y), (x + w, y + h), (0, 0, 255), 1)
+        letters.append(output_image[y: y + h, x: x + w])
+        boxes.append((x, y, w, h))
 
-
-    cv2.imwrite(training_img_path('out_boxed.png'), output_image)
-
-
-if len(sys.argv) > 1:
-    im_name = sys.argv[1]
-    try:
-        test(im_name)
-    except Exception as e:
-        print(str(e))
-else:
-    print('Usage: \npython ImageCutter.py {filename}')
+    return letters, boxes

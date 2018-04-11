@@ -1,3 +1,4 @@
+import cv2
 import sys
 from utils import *
 from items_creator import create_item_list
@@ -9,6 +10,9 @@ import datetime
 import time
 import Augmentor
 import functools
+# from scanner import scan
+from line_seg import cut_lines
+from letter_cutter import cut_letters
 
 
 def create_config():
@@ -18,7 +22,7 @@ def create_config():
         'item_space_count': random.choice(range(1, 4)),
         'break_long_words': random.choice([True, False, False, False]),
         'has_table_header': random.choice([True, False]),
-        'distort_val': random.choice(range(2, 20)),
+        'distort_val': random.choice(range(2, 3)),
         'margin_hori': random.choice(range(40, 80)),
         'margin_vert': random.choice(range(40, 200)),
         'dist_name_price': random.choice(range(2, 6)),
@@ -31,7 +35,7 @@ def create_config():
         'num_row_prefix_2': random.choice(range(0, 5)),
         'num_row_suffix': random.choice(range(0, 4)),
         'num_row_suffix_2': random.choice(range(1, 5)),
-        'blur': random.choice(range(0, 3)),
+        'blur': random.choice(range(0, 2)),
     }
     return config
 
@@ -78,6 +82,7 @@ def draw_text(text, margin_hori, margin_vert):
     textsize = drawer.textsize(text, font=fnt)
     width = 2*margin_hori+textsize[0]
     height = 2*margin_vert+textsize[1]
+    # img = Image.new('RGBA', (width, height), white_color_tpl())
     img = Image.open(pick_resource('paper-texture'), 'r')
     img_w, img_h = img.size
     scale = max((width * 1.0 / img_w), (height * 1.0 / img_h))
@@ -88,7 +93,7 @@ def draw_text(text, margin_hori, margin_vert):
     img = img.crop((x, y, x + width, y + height))
     img = img.convert('RGBA')
     drawer = ImageDraw.Draw(img)
-    drawer.text((margin_hori, margin_vert), text, font=fnt, fill=black_color_tpl())
+    drawer.text((margin_hori, margin_vert), text, font=fnt, fill=(0, 0, 0, 255))
     return img, drawer
 
 
@@ -143,7 +148,21 @@ def shadow_outline(shadow_part, size):
     elif shadow_part == (3, 4):
         return [bottomright(), bottomleft(), (0, (bottom() + hh)/2), (w, (bottom() + hh)/2)]
 
-def draw_receipt():
+def draw_receipt_with_letter_boxes(debug=False):
+    def save_pil_image(image, filename, hard=False):
+        if hard:
+            image.save(filename, filename.rsplit('.', 1)[-1])
+        elif debug:
+            image.save(filename, filename.rsplit('.', 1)[-1])
+
+
+    def save_cv2_image(image, filename, hard=False):
+        if hard:
+            cv2.imwrite(filename, image)
+        elif debug:
+            cv2.imwrite(filename, image)
+
+
     config = create_config()
     item_count_min = 2
     item_count_max = 6
@@ -160,7 +179,7 @@ def draw_receipt():
     currency_side = config['currency_side']
     price_min = config['price_min']
     price_max = config['price_max']
-    distort_val = config['distort_val']
+    # distort_val = config['distort_val']
     num_row_prefix = config['num_row_prefix']
     num_row_prefix_2 = config['num_row_prefix_2']
     num_row_suffix = config['num_row_suffix']
@@ -194,30 +213,6 @@ def draw_receipt():
     if not os.path.exists(directory + '/back'):
         os.makedirs(directory + '/back')
 
-    # Draw
-    img, drawer = draw_text(text, margin_hori, margin_vert)
-
-    # Save original
-    img.save(directory + '/image.png', 'png')
-
-    # Blur
-    img = img.filter(ImageFilter.GaussianBlur(radius=blur))
-
-    # Save for further processing
-    img.save(directory + '/image_blur.png', 'png')
-
-    # Add background
-    add_img_to_canvas(directory + '/image_blur.png', directory + '/back')
-
-    # Distort
-    pipeline = Augmentor.Pipeline(directory + '/back')
-    pipeline.random_distortion(probability=1, grid_width=distort_val, grid_height=distort_val, magnitude=100/distort_val)
-    pipeline.sample(1)
-    distorted_dir = directory + '/back/output'
-    distorted_path = distorted_dir + '/' + [x for x in os.listdir(distorted_dir) if 'back' in x][0]
-    os.rename(distorted_path, directory + '/image_distorted.png')
-    shutil.rmtree(directory + '/back')
-
     # Create text file
     text_f = open(directory + '/text.txt', 'w')
     text_f.write(text)
@@ -228,10 +223,61 @@ def draw_receipt():
     item_f.write(json.dumps(dict(items=item_list, config=config), indent=4, sort_keys=True))
     item_f.close()
 
+    # Draw
+    img, drawer = draw_text(text, margin_hori, margin_vert)
+
+    # Save original
+    save_pil_image(img, directory + '/image.png')
+
+    # Blur
+    img = img.filter(ImageFilter.GaussianBlur(radius=blur))
+
+    # Save for further processing
+    save_pil_image(img, directory + '/image_blur.png', hard=True)
+
+    # # Add background
+    # add_img_to_canvas(directory + '/image_blur.png', directory + '/back')
+
+    # # Distort
+    # pipeline = Augmentor.Pipeline(directory + '/back')
+    # pipeline.random_distortion(probability=1, grid_width=distort_val, grid_height=distort_val, magnitude=1)
+    # pipeline.sample(1)
+    # distorted_dir = directory + '/back/output'
+    # distorted_path = distorted_dir + '/' + [x for x in os.listdir(distorted_dir) if 'back' in x][0]
+    # os.rename(distorted_path, directory + '/image_distorted.png')
+    # shutil.rmtree(directory + '/back')
+
+    # # Scan
+    # scanned = scan(cv2.imread(directory + '/image_distorted.png'))
+    # save_cv2_image(scanned, directory + '/scanned.png', hard=True)
+
+    # Cut lines
+    # lines_labeled, lines = cut_lines(cv2.imread(directory + '/scanned.png'))
+    lines_labeled, lines, line_boxes = cut_lines(cv2.imread(directory + '/image_blur.png'))
+    save_cv2_image(lines_labeled, directory + '/lines_labeled.png')
+    os.makedirs(directory + '/lines')
+    for idx, line in enumerate(lines):
+        save_cv2_image(line, directory + '/lines/line_{}.png'.format(idx))
+
+    # Cut letters
+    letters = []
+    letter_boxes = []
+    os.makedirs(directory + '/letters')
+    for line_idx, line in enumerate(lines):
+        line_box = line_boxes[line_idx]
+        letters, boxes = cut_letters(line)
+        for letter_idx, letter in enumerate(letters):
+            save_cv2_image(letter, directory + '/letters/line_{}_letter_{}.png'.format(line_idx, letter_idx))
+            boxes = [(box[0] + line_box[0], box[1] + line_box[1], box[2], box[3]) for box in boxes]
+            letter_boxes += boxes
+
+    return img, letter_boxes
+
+
 
 def create_sample(count):
     for i in range(count):
-        draw_receipt()
+        draw_receipt_with_letter_boxes()
         print('{} more job(s) remain'.format(count - i - 1))
 
 
@@ -240,12 +286,12 @@ if len(sys.argv) > 1:
         if 'results' in os.listdir('.'):
             shutil.rmtree('results')
     else:
+        count = 0
         try:
             count = int(sys.argv[1])
-            if count < 1:
-                print('Invalid parameter')
-            else:
-                create_sample(count)
-                os.system('open results')
         except ValueError:
             print('Invalid parameter.')
+        if count < 1:
+            print('Invalid parameter')
+        else:
+            create_sample(count)
