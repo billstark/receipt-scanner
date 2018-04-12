@@ -37,10 +37,9 @@ def eval_letter_width(bounding_boxes):
         filtered_widths = [width for width in widths if -tolerance <= (width - average)/np.sqrt(variance/n) <= tolerance]
         if not filtered_widths:
             tolerance *= 1.5
-            print tolerance, widths
         else:
             break
-    return np.max(filtered_widths)
+    return np.max(filtered_widths), np.average(filtered_widths)
 
 
 def combine_horizontally(bounding_boxes, evaled_letter_width):
@@ -65,6 +64,23 @@ def combine_horizontally(bounding_boxes, evaled_letter_width):
     return sorted_boxes
 
 
+def split_widths(bounding_boxes, evaled_avg_letter_width):
+    idx = 0
+    splitted = []
+    while idx < len(bounding_boxes) - 1:
+        box = bounding_boxes[idx]
+        width = box.w
+        n = round(width / evaled_avg_letter_width)
+        if n > 1:
+            new_width = int(round(width / n))
+            bounding_boxes.pop(idx)
+            splitted += [BoundingBox((box.x + x, 0, new_width, box.h)) for x in range(0, width, int(new_width))]
+        else:
+            idx += 1
+
+    return sorted(bounding_boxes + splitted, key=lambda x: x.x)
+
+
 def get_bounding_boxes(bounding_box_vals, w, h):
     # bounding_boxes = [BoundingBox(bounding_box_val) for bounding_box_val in bounding_box_vals]
     bounding_boxes = [BoundingBox((bounding_box_val[0], 0, bounding_box_val[2], h)) for bounding_box_val in bounding_box_vals]
@@ -73,10 +89,13 @@ def get_bounding_boxes(bounding_box_vals, w, h):
     bounding_boxes = merge_bounding_boxes(bounding_boxes)
 
     # Evaluate letter width
-    evaled_letter_width = eval_letter_width(bounding_boxes)
+    evaled_letter_width, evaled_avg_letter_width = eval_letter_width(bounding_boxes)
 
     # Combine bounding boxes that intersect but combined width is around letter width
     bounding_boxes = combine_horizontally(bounding_boxes, evaled_letter_width)
+
+    # split boxes of n times width of most boxes into n boxes
+    bounding_boxes = split_widths(bounding_boxes, evaled_avg_letter_width)
 
     return bounding_boxes
 
@@ -103,7 +122,7 @@ class BoundingBox(object):
 
 def add_border(image):
     bordersize=1
-    border=cv2.copyMakeBorder(image, top=bordersize, bottom=bordersize, left=bordersize, right=bordersize, borderType= cv2.BORDER_CONSTANT, value=[255, 255, 255])
+    border=cv2.copyMakeBorder(image, top=bordersize, bottom=bordersize, left=bordersize, right=bordersize, borderType=cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
     return border
 
