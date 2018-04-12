@@ -281,6 +281,12 @@ def draw_receipt_with_letter_boxes(debug=False):
     return img, letter_boxes
 
 
+def scan_receipt(filename=None, debug=False):
+    if filename:
+        return draw_receipt_with_letter_boxes(debug=False)
+    img = cv2.imread(filename)
+    return
+
 
 def create_sample(count):
     for i in range(count):
