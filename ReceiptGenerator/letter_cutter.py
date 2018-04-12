@@ -29,7 +29,7 @@ def eval_letter_width(bounding_boxes):
     average = np.average(widths)
     variance = np.var(widths)
     if variance == 0:
-        return widths[0]
+        return widths[0], widths[0]
     n = len(widths)
     tolerance = 4 # Higher for more tolerance over outliers
     filtered_widths = []
@@ -39,7 +39,8 @@ def eval_letter_width(bounding_boxes):
             tolerance *= 1.5
         else:
             break
-    return np.max(filtered_widths), np.average(filtered_widths)
+
+    return (np.max(filtered_widths), np.average(filtered_widths))
 
 
 def combine_horizontally(bounding_boxes, evaled_letter_width):
