@@ -6,6 +6,20 @@ from CNNModel.image_classifier import classify
 
 OUT_PUT_DIR = './ReceiptProcessor/TestOutputs/'
 
+def add_border(img_np, top_and_bottom, left_and_right):
+    return cv2.copyMakeBorder(img_np, top = top_and_bottom, \
+        bottom = top_and_bottom, left = left_and_right, \
+        right = left_and_right, borderType = cv2.BORDER_CONSTANT, \
+        value = [255, 255, 255])
+
+def extend_to_square(img_np):
+    height, width, _ = img_np.shape
+    if height > width:
+        offset = (height - width) / 2
+        return add_border(img_np, 0, offset)
+    else:
+        return add_border(img_np, offset, 0)
+
 def to_grey(img_np):
     img_np = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
     return img_np
@@ -16,30 +30,21 @@ def threshold(img_np):
 
 def largest_box(img_np):
     processed_img = threshold(to_grey(img_np))
-    _, contours, hierarchy = cv2.findContours(processed_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    height, width = img_np.shape
 
-    height, width = processed_img.shape
-    lm_x = width
-    tm_y = height
-    rm_x = 0
-    bm_y = 0
-    print '==============================='
-    for index, contour in enumerate(contours):
-        print hierarchy[index][0]
-        # print 'width: {}, height: {}'.format(width, height)
-        # x, y, w, h = cv2.boundingRect(contour)
-        # print 'x: {}, y: {}, w: {}, h: {}'.format(x, y, w, h)
-        # if x == 0 and y == 0 and w == width and h == height:
-        #     continue
-        # if x < lm_x:
-        #     lm_x = x
-        # if x + w > rm_x:
-        #     rm_x = x + w
-        # if y < tm_y:
-        #     tm_y = y
-        # if y + h > bm_y:
-        #     bm_y = y + h
-    return lm_x, tm_y, rm_x - lm_x, bm_y - tm_y
+    l_x = width
+    t_y = height
+    r_x = 0
+    b_y = 0
+
+    for y in range(0, height):
+        for x in range(0, width):
+            if img_np[y][x] == 0:
+                l_x = min(l_x, x)
+                t_y = min(t_y, y)
+                r_x = max(r_x, x)
+                b_y = max(b_y, y)
+    return l_x, t_y, (r_x - l_x), (b_y - t_y)
 
 
 img, letter_boxes = draw_receipt_with_letter_boxes()
@@ -49,7 +54,11 @@ cv2.imwrite(OUT_PUT_DIR + 'test.png', np.array(img))
 for index, letter_box in enumerate(letter_boxes):
     x, y, w, h = letter_box
     croped = img[y : y + h, x : x + w]
+    croped = add_border(croped, 1, 1)
     bx, by, bw, bh = largest_box(croped)
-    print bx, by, bw, bh
+    croped = croped[by : by + bh, bx : bx + bw]
+    height, width, channel = croped.shape
+    croped = extend_to_square(croped)
+
     cv2.rectangle(croped, (bx, by), (bx + bw, by + bh), (0, 0, 255), 1)
     cv2.imwrite(OUT_PUT_DIR + 'test_letters/{}.png'.format(index), croped)
