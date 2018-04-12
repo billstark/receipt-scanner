@@ -21,7 +21,7 @@ def shadow_tpl():
 
 
 def pick_resource(path):
-    _path = 'resources/' + path
+    _path = 'ReceiptGenerator/resources/' + path
     items = [x for x in os.listdir(_path) if '.DS_Store' not in x]
     result = _path + '/' + random.choice(items)
     return result
