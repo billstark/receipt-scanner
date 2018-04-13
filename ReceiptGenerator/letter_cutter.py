@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import os
 import sys
+from bounding_box import BoundingBox
 
 def merge_bounding_boxes(bounding_boxes):
     # Algo to be improved for better performance
@@ -75,7 +76,7 @@ def split_widths(bounding_boxes, evaled_avg_letter_width):
         if n > 1:
             new_width = int(round(width / n))
             bounding_boxes.pop(idx)
-            splitted += [BoundingBox((box.x + x, 0, new_width, box.h)) for x in range(0, width, int(new_width))]
+            splitted += [BoundingBox((box.x + incr, 0, new_width, box.h)) for incr in range(0, int(n * new_width), int(new_width))]
         else:
             idx += 1
 
@@ -99,26 +100,6 @@ def get_bounding_boxes(bounding_box_vals, w, h):
     bounding_boxes = split_widths(bounding_boxes, evaled_avg_letter_width)
 
     return bounding_boxes
-
-
-class BoundingBox(object):
-    def __init__(self, bounding_box_vals):
-        self.x, self.y, self.w, self.h = bounding_box_vals
-        self.size = self.w * self.h
-
-    def is_inside(self, other):
-        return self.x >= other.x and\
-               self.y >= other.y and\
-               self.x + self.w <= other.x + other.w and\
-               self.y + self.h <= other.y + other.h
-
-    @staticmethod
-    def combine(b1, b2):
-        x = min(b1.x, b2.x)
-        y = min(b1.y, b2.y)
-        w = max(b1.x + b1.w, b2.x + b2.w) - x
-        h = max(b1.y + b1.h, b2.y + b2.h) - y
-        return BoundingBox((x, y, w, h))
 
 
 def add_border(image):
