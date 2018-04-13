@@ -11,7 +11,7 @@ import datetime
 import time
 import Augmentor
 import functools
-# from scanner import scan
+from scanner import scan
 from line_seg import cut_lines
 from letter_cutter import cut_letters
 
@@ -282,10 +282,31 @@ def draw_receipt_with_letter_boxes(debug=False):
 
 
 def scan_receipt(filename=None, debug=False):
-    if filename:
+    if not filename:
         return draw_receipt_with_letter_boxes(debug=False)
-    img = cv2.imread(filename)
-    return
+
+    # Read from path
+    scanned = scan(cv2.imread(filename))
+
+    # Cut lines
+    lines_labeled, lines, line_boxes = cut_lines(scanned)
+
+    # Cut letters
+    letter_boxes = []
+    for line_idx, line in enumerate(lines):
+        line_box = line_boxes[line_idx]
+        letters, boxes = cut_letters(line)
+        boxes = [(box[0] + line_box[0], box[1] + line_box[1], box[2], box[3]) for box in boxes]
+        letter_boxes += boxes
+
+    if debug:
+        back = cv2.cvtColor(np.array(scanned), cv2.COLOR_RGB2BGR)
+        for rect in letter_boxes:
+            back = cv2.rectangle(back, (rect[0], rect[1]), (rect[0]+rect[2], rect[1]+rect[3]), (255, 0, 0))
+        cv2.imshow('letters', back)
+        cv2.waitKey(0)
+
+    return scanned, letter_boxes
 
 
 def create_sample(count):
