@@ -13,7 +13,7 @@ def eval_line_height(bounding_boxes):
     tolerance = 4 # Higher for more tolerance over outliers
     filtered_heights = []
     while True:
-        filtered_heights = [height for height in heights if -tolerance <= (height - average)/np.sqrt(variance/n) <= tolerance]
+        filtered_heights = [height for height in heights if -tolerance <= (height - average) / np.sqrt(variance/n) <= tolerance]
         if not filtered_heights:
             tolerance *= 1.5
         else:
@@ -41,7 +41,7 @@ def split_heights(bounding_boxes, evaled_avg_line_height):
 
 def seperate_n_lines(bounding_boxes):
     # Evaluate letter width
-    evaled_line_height, evaled_avg_line_height = eval_line_height(bounding_boxes)
+    _, evaled_avg_line_height = eval_line_height(bounding_boxes)
 
     # split boxes of n times width of most boxes into n boxes
     bounding_boxes = split_heights(bounding_boxes, evaled_avg_line_height)
@@ -57,14 +57,14 @@ def cut_lines(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Binary
-    ret, thresh = cv2.threshold(gray,127,255,cv2.THRESH_BINARY_INV)
+    _, thresh = cv2.threshold(gray,127,255,cv2.THRESH_BINARY_INV)
 
     # Dilation
     kernel = np.ones((3, 100), np.uint8)
     img_dilation = cv2.dilate(thresh, kernel, iterations=1)
 
     # Find, sort contours
-    im2,ctrs, hier = cv2.findContours(img_dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    _, ctrs, _ = cv2.findContours(img_dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     sorted_ctrs = sorted(ctrs, key=lambda ctr: cv2.boundingRect(ctr)[1])
 
     # Cut out lines

@@ -95,7 +95,7 @@ def draw_text(text, margin_hori, margin_vert):
     img = img.convert('RGBA')
     drawer = ImageDraw.Draw(img)
     drawer.text((margin_hori, margin_vert), text, font=fnt, fill=(0, 0, 0, 255))
-    return img, drawer
+    return img
 
 
 def add_img_to_canvas(path, dest):
@@ -225,7 +225,7 @@ def draw_receipt_with_letter_boxes(debug=False):
     item_f.close()
 
     # Draw
-    img, drawer = draw_text(text, margin_hori, margin_vert)
+    img = draw_text(text, margin_hori, margin_vert)
 
     # Save original
     save_pil_image(img, directory + '/image.png')

@@ -35,7 +35,7 @@ def eval_letter_width(bounding_boxes):
     tolerance = 4 # Higher for more tolerance over outliers
     filtered_widths = []
     while True:
-        filtered_widths = [width for width in widths if -tolerance <= (width - average)/np.sqrt(variance/n) <= tolerance]
+        filtered_widths = [width for width in widths if -tolerance <= (width - average) / np.sqrt(variance/n) <= tolerance]
         if not filtered_widths:
             tolerance *= 1.5
         else:
@@ -103,7 +103,7 @@ def get_bounding_boxes(bounding_box_vals, w, h):
 
 
 def add_border(image):
-    bordersize=1
+    bordersize = 1
     border=cv2.copyMakeBorder(image, top=bordersize, bottom=bordersize, left=bordersize, right=bordersize, borderType=cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
     return border
