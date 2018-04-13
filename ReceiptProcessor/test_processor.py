@@ -1,12 +1,18 @@
 import os
 import numpy as np
 import cv2
+import tensorflow as tf
 from ReceiptGenerator.draw_receipt import draw_receipt_with_letter_boxes
 from CNNModel.image_classifier import classify
 
 OUT_PUT_DIR = './ReceiptProcessor/TestOutputs/'
 STANDARD_IMAGE_SIZE = 64
 OCCUPATION_RATIO = 0.5
+
+FONT = cv2.FONT_HERSHEY_SIMPLEX
+SCALE = 1
+COLOR = (0, 0, 255)
+LINE_TYPE = 2
 
 def add_border(img_np, top_and_bottom, left_and_right):
     return cv2.copyMakeBorder(img_np, top = top_and_bottom, \
@@ -58,18 +64,38 @@ def largest_box(img_np):
                 b_y = max(b_y, y)
     return l_x, t_y, (r_x - l_x), (b_y - t_y)
 
+def process_receipt(receipt_img_np, letter_boxes):
+    result = []
+    for index, letter_box in enumerate(letter_boxes):
+        x, y, w, h = letter_box
+
+        try:
+            croped = receipt_img_np[y : y + h, x : x + w]
+            croped = add_border(croped, 5, 5)
+            bx, by, bw, bh = largest_box(croped)
+            croped = croped[by - 1 : by + bh + 1, bx - 1 : bx + bw + 1]
+            croped = extend_to_square(croped)
+            croped = extend_to_center(croped)
+            croped = resize_to_standard(croped)
+            croped = to_grey(croped)
+            _, thresh = cv2.threshold(croped, 50, 255, cv2.THRESH_BINARY)
+
+            thresh = np.asarray(thresh, np.float32)
+            tf_image = tf.convert_to_tensor(thresh, np.float32)
+            tf_image = tf.reshape(tf_image, [64*64])
+
+            label = classify(tf_image)
+            result.append((label, letter_box))
+
+            cv2.putText(receipt_img_np, label, (x, y), FONT, SCALE, COLOR, LINE_TYPE)
+            cv2.imwrite(OUT_PUT_DIR + 'test_letters/{}.png'.format(index), thresh)
+        except AttributeError:
+            continue
+
+    cv2.imwrite(OUT_PUT_DIR + 'test.png', receipt_img_np)
+    return result
 
 img, letter_boxes = draw_receipt_with_letter_boxes()
-img = np.array(img)
-cv2.imwrite(OUT_PUT_DIR + 'test.png', np.array(img))
+new_img = np.array(img)
 
-for index, letter_box in enumerate(letter_boxes):
-    x, y, w, h = letter_box
-    croped = img[y : y + h, x : x + w]
-    croped = add_border(croped, 1, 1)
-    bx, by, bw, bh = largest_box(croped)
-    croped = croped[by : by + bh, bx : bx + bw]
-    croped = extend_to_square(croped)
-    croped = extend_to_center(croped)
-    croped = resize_to_standard(croped)
-    cv2.imwrite(OUT_PUT_DIR + 'test_letters/{}.png'.format(index), croped)
+process_receipt(new_img, letter_boxes)

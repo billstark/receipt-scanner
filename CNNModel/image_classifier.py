@@ -23,30 +23,24 @@ def read_image(file):
     file_content = tf.read_file(file)
 
     image = tf.image.decode_jpeg(file_content, channels=1)
-    print("===========================")
-    print(image)
-    print("===========================")
     image = tf.image.convert_image_dtype(image, dtype=tf.float32)
     image = tf.reshape(image, [64*64])
+    print image
     return image
 
 
-def classify(args):
+def classify(image, label_file=DEFAULT_LABEL_FILE, graph_file=DEFAULT_GRAPH_FILE):
     """Classify a character.
 
     This method will import the saved model from the given graph file, and will
     pass in the given image pixels as input for the classification. The top
     five predictions will be printed.
     """
-    labels = io.open(args.label_file,
+    labels = io.open(label_file,
                      'r', encoding='utf-8').read().splitlines()
 
-    if not os.path.isfile(args.image):
-        print('Error: Image %s not found.' % args.image)
-        sys.exit(1)
-
     # Load graph and parse file.
-    with tf.gfile.GFile(args.graph_file, "rb") as f:
+    with tf.gfile.GFile(graph_file, "rb") as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString(f.read())
 
@@ -65,7 +59,6 @@ def classify(args):
     y = graph.get_tensor_by_name('character-model/output:0')
     keep_prob = graph.get_tensor_by_name('character-model/keep_prob:0')
 
-    image = read_image(args.image)
     sess = tf.InteractiveSession()
     image_array = sess.run(image)
 
@@ -77,10 +70,12 @@ def classify(args):
     # Get the indices that would sort the array, then only get the indices that
     # correspond to the top 5 predictions.
     sorted_indices = prediction.argsort()[::-1][:5]
-    for index in sorted_indices:
-        label = labels[index]
-        confidence = prediction[index]
-        print('%s (confidence = %.5f)' % (label, confidence))
+    index = prediction.argsort()[::-1][0]
+    print('=================================================')
+    label = labels[index]
+    confidence = prediction[index]
+    print('%s (confidence = %.5f)' % (label, confidence))
+    return label
 
 
 if __name__ == '__main__':
