@@ -43,3 +43,11 @@ def rand_seq(uppercase_policy='upper', max_length=40):
         seq += next_sub
     seq = seq[:40]
     return seq
+
+def rand_crnn_char():
+    special_chars = ['-', '_']
+    return random.choice([chr(x) for x in range(ord('a'), ord('z')+1)] + special_chars + [chr(x) for x in range(ord('A'), ord('Z')+1)])
+
+def rand_crnn_seq(uppercase_policy='upper'):
+    max_length = 5
+    return ''.join([rand_crnn_char() for _ in range(max_length)])

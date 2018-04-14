@@ -76,10 +76,10 @@ def create_left_aligned_text(num_col, num_row):
     return '\n'.join(create_decor_text_lines(num_col, num_row))
 
 
-def draw_text(text, margin_hori, margin_vert):
+def draw_text(text, margin_hori, margin_vert, font_size=40):
     img = Image.new('RGBA', (1, 1), white_color_tpl())
     drawer = ImageDraw.Draw(img)
-    fnt = ImageFont.truetype(pick_resource('fonts'), 40)
+    fnt = ImageFont.truetype(pick_resource('fonts'), font_size)
     textsize = drawer.textsize(text, font=fnt)
     width = 2*margin_hori+textsize[0]
     height = 2*margin_vert+textsize[1]
@@ -309,6 +309,14 @@ def scan_receipt(filename=None, debug=False):
     return scanned, letter_boxes
 
 
+def create_crnn_sample():
+    text = rand_crnn_seq(uppercase_policy='upper' if random.choice(range(0, 2)) else 'title')
+    img = draw_text(text, 0, 0, font_size=32)
+    img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    img = cv2.resize(img, (100, 32), interpolation = cv2.INTER_CUBIC)
+    return img, text
+
+
 def create_sample(count):
     for i in range(count):
         draw_receipt_with_letter_boxes(debug=True)
@@ -328,4 +336,4 @@ if len(sys.argv) > 1:
         if count < 1:
             print('Invalid parameter')
         else:
-            create_sample(count)
+            create_crnn_sample()
