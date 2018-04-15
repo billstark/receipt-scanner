@@ -1,8 +1,7 @@
-import os
 import numpy as np
 import cv2
 import tensorflow as tf
-from ReceiptGenerator.draw_receipt import draw_receipt_with_letter_boxes
+from ReceiptGenerator.draw_receipt import scan_receipt
 from CNNModel.image_classifier import classify
 
 OUT_PUT_DIR = './ReceiptProcessor/TestOutputs/'
@@ -43,7 +42,7 @@ def to_grey(img_np):
     return img_np
 
 def threshold(img_np):
-    _, thresh = cv2.threshold(img_np, 100, 255, cv2.THRESH_BINARY)
+    _, thresh = cv2.threshold(img_np, 0 , 255 ,cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return thresh
 
 def largest_box(img_np):
@@ -72,13 +71,13 @@ def process_receipt(receipt_img_np, letter_boxes):
         try:
             croped = receipt_img_np[y : y + h, x : x + w]
             croped = add_border(croped, 5, 5)
-            bx, by, bw, bh = largest_box(croped)
-            croped = croped[by - 1 : by + bh + 1, bx - 1 : bx + bw + 1]
+            bx, by, bw, bh = largest_box(croped.copy())
+            croped = croped[by - 4 : by + bh + 4, bx - 4 : bx + bw + 4]
             croped = extend_to_square(croped)
             croped = extend_to_center(croped)
             croped = resize_to_standard(croped)
             croped = to_grey(croped)
-            _, thresh = cv2.threshold(croped, 50, 255, cv2.THRESH_BINARY)
+            _, thresh = cv2.threshold(croped, 150 , 255, cv2.THRESH_BINARY)
 
             thresh = np.asarray(thresh, np.float32)
             tf_image = tf.convert_to_tensor(thresh, np.float32)
@@ -88,6 +87,7 @@ def process_receipt(receipt_img_np, letter_boxes):
             result.append((label, letter_box))
 
             cv2.putText(receipt_img_np, label, (x, y), FONT, SCALE, COLOR, LINE_TYPE)
+            # cv2.rectangle(receipt_img_np, (x, y), (x + w, y + h), (0, 0, 255), 1)
             cv2.imwrite(OUT_PUT_DIR + 'test_letters/{}.png'.format(index), thresh)
         except AttributeError:
             continue
@@ -95,7 +95,7 @@ def process_receipt(receipt_img_np, letter_boxes):
     cv2.imwrite(OUT_PUT_DIR + 'test.png', receipt_img_np)
     return result
 
-img, letter_boxes = draw_receipt_with_letter_boxes()
+img, letter_boxes = scan_receipt('./ReceiptProcessor/TestOutputs/IMG_1695.JPG')
 new_img = np.array(img)
 
 process_receipt(new_img, letter_boxes)
