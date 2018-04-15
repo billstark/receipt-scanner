@@ -48,6 +48,68 @@ def rand_crnn_char():
     special_chars = ['-', '_']
     return random.choice([chr(x) for x in range(ord('a'), ord('z')+1)] + special_chars + [chr(x) for x in range(ord('A'), ord('Z')+1)])
 
-def rand_crnn_seq(uppercase_policy='upper'):
+
+def rand_price(start=0, end=10000):
+    return float("{0:.2f}".format(random.uniform(start, end)))
+
+
+def price_to_str(price, currency_mark, currency_side):
+    if currency_side == 'left':
+        return currency_mark + str(price)
+    return str(price) + currency_mark
+
+
+
+
+def crnn_word():
     max_length = 5
     return ''.join([rand_crnn_char() for _ in range(max_length)])
+
+
+def crnn_word_column():
+    max_length = 4
+    return ''.join([rand_crnn_char() for _ in range(max_length)]) + ':'
+
+
+def crnn_word_bracket():
+    max_length = 4
+    return '(' + ''.join([rand_crnn_char() for _ in range(max_length)]) + ')'
+
+
+def crnn_int():
+    return str(rand_int_range(10000, 100000))
+
+
+def crnn_float():
+    return str(rand_price())[-5:]
+
+
+def crnn_price_left():
+    return str(price_to_str(rand_price(0, 100), '$', 'left'))
+
+
+def crnn_price_right():
+    return str(price_to_str(rand_price(0, 100), '$', 'right'))
+
+
+def crnn_percentage():
+    return str(rand_price(0, 100)) + '%'
+
+
+def crnn_line_text(typ):
+    if typ == 'word':
+        return crnn_word()
+    elif typ == 'word_column':
+        return crnn_word_column()
+    elif typ == 'word_bracket':
+        return crnn_word_bracket()
+    elif typ == 'int':
+        return crnn_int()
+    elif typ == 'float':
+        return crnn_float()
+    elif typ == 'price_left':
+        return crnn_price_left()
+    elif typ == 'price_right':
+        return crnn_price_right()
+    elif typ == 'percentage':
+        return crnn_percentage()

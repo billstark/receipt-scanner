@@ -1,14 +1,5 @@
 from utils import *
 
-def rand_price(start=0, end=10000):
-    return float("{0:.2f}".format(random.uniform(start, end)))
-
-
-def price_to_str(price, currency_mark, currency_side):
-    if currency_side == 'left':
-        return currency_mark + str(price)
-    return str(price) + currency_mark
-
 
 def create_item(uppercase_policy='upper', currency_mark='$', currency_side='left', price_min=0, price_max=10000):
     price = rand_price(start=price_min, end=price_max)

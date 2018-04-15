@@ -309,8 +309,17 @@ def scan_receipt(filename=None, debug=False):
     return scanned, letter_boxes
 
 
-def create_crnn_sample():
-    text = rand_crnn_seq(uppercase_policy='upper' if random.choice(range(0, 2)) else 'title')
+def create_crnn_sample(typ):
+    # typ
+    # 'word'                A_b-c
+    # 'word_column'         Ab_-c:
+    # 'word_bracket'        (AbC_)
+    # 'int'                 12312
+    # 'float'               23.45
+    # 'price_left'          $12.34
+    # 'price_right'         12.34$
+    # 'percentage'          12.34%
+    text = crnn_line_text(typ)
     img = draw_text(text, 0, 0, font_size=32)
     img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     img = cv2.resize(img, (100, 32), interpolation = cv2.INTER_CUBIC)
@@ -336,4 +345,4 @@ if len(sys.argv) > 1:
         if count < 1:
             print('Invalid parameter')
         else:
-            create_crnn_sample()
+            create_crnn_sample('word')
