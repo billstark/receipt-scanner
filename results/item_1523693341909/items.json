@@ -1,0 +1,57 @@
+{
+    "config": {
+        "blur": 0, 
+        "break_long_words": true, 
+        "currency_mark": "$", 
+        "currency_side": "left", 
+        "dist_name_price": 2, 
+        "distort_val": 2, 
+        "has_table_header": true, 
+        "item_name_uppercase_policy": "upper", 
+        "item_space_count": 1, 
+        "margin_hori": 50, 
+        "margin_vert": 115, 
+        "num_col": 48, 
+        "num_row_prefix": 5, 
+        "num_row_prefix_2": 3, 
+        "num_row_suffix": 2, 
+        "num_row_suffix_2": 2, 
+        "price_max": 7519, 
+        "price_min": 3, 
+        "seperator": "-"
+    }, 
+    "items": {
+        "items": [
+            {
+                "name": "-AMDLMTFVX VECGZQ MCWYDFXM UXENZ CLOHR M", 
+                "price": 5977.38, 
+                "price_str": "$5977.38", 
+                "qty": 65
+            }, 
+            {
+                "name": "EWUFM_Y BMIFLIZ FTEGHSL_DG FRCSENW RTCI ", 
+                "price": 3831.67, 
+                "price_str": "$3831.67", 
+                "qty": 86
+            }, 
+            {
+                "name": "EGV -XPXBI WENWFJBJJL VYEQ- DAHUJSXMG ZT", 
+                "price": 6062.53, 
+                "price_str": "$6062.53", 
+                "qty": 12
+            }, 
+            {
+                "name": "P_ A-Y TQVRNN YU KIX HK-- DPBFO QXZESYFD", 
+                "price": 5344.55, 
+                "price_str": "$5344.55", 
+                "qty": 36
+            }
+        ], 
+        "total": {
+            "name": "TOTAL", 
+            "price": 21216.129999999997, 
+            "price_str": "$21216.13", 
+            "qty": " "
+        }
+    }
+}
