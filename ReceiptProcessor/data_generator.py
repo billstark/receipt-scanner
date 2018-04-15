@@ -13,7 +13,7 @@ with open('./ReceiptProcessor/training_images/Train/sample.txt', 'w') as input_f
         if not os.path.exists('./ReceiptProcessor/training_images/Train/{}'.format(type)):
             os.mkdir('./ReceiptProcessor/training_images/Train/{}'.format(type))
         for i in range(0, NUM_OF_TRAINING_IMAGES):
-            img, label = create_crnn_sample()
+            img, label = create_crnn_sample(type)
             cv2.imwrite('./ReceiptProcessor/training_images/Train/{}/{}.jpg'.format(type, i), img)
             input_file.write('{}/{}.jpg {}\n'.format(type, i, label))
 
@@ -22,6 +22,6 @@ with open('./ReceiptProcessor/training_images/Test/sample.txt', 'w') as input_fi
         if not os.path.exists('./ReceiptProcessor/training_images/Test/{}'.format(type)):
             os.mkdir('./ReceiptProcessor/training_images/Test/{}'.format(type))
         for i in range(0, NUM_OF_TEST_IMAGES):
-            img, label = create_crnn_sample()
+            img, label = create_crnn_sample(type)
             cv2.imwrite('./ReceiptProcessor/training_images/Test/{}/{}.jpg'.format(type, i), img)
             input_file.write('{}/{}.jpg {}\n'.format(type, i, label))
