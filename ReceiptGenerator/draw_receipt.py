@@ -11,7 +11,7 @@ import datetime
 import time
 import Augmentor
 import functools
-from scanner import scan
+# from scanner import scan
 from line_seg import cut_lines
 from letter_cutter import cut_letters
 
