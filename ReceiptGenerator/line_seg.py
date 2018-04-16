@@ -28,7 +28,7 @@ def split_heights(bounding_boxes, evaled_avg_line_height):
     while idx < len(bounding_boxes) - 1:
         box = bounding_boxes[idx]
         height = box.h
-        n = round(height / evaled_avg_line_height)
+        n = int(height / evaled_avg_line_height)
         if n > 1:
             new_height = int(round(height / n))
             bounding_boxes.pop(idx)
@@ -49,7 +49,7 @@ def seperate_n_lines(bounding_boxes):
     return bounding_boxes
 
 
-def cut_lines(image):
+def cut_lines(image, for_crnn=True):
     # Copy for labelling
     labelled = image.copy()
 
@@ -60,7 +60,7 @@ def cut_lines(image):
     _, thresh = cv2.threshold(gray,127,255,cv2.THRESH_BINARY_INV)
 
     # Dilation
-    kernel = np.ones((3, 100), np.uint8)
+    kernel = np.ones((3, 15 if for_crnn else 100), np.uint8)
     img_dilation = cv2.dilate(thresh, kernel, iterations=1)
 
     # Find, sort contours
