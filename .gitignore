@@ -1,6 +1,6 @@
 /CNNModel/trainingImages/*
-/CNNModel/image-data
-/CNNModel/saved-model
+/CNNModel/image_data
+/CNNModel/saved_model
 /CRNNModel/logs
 /ReceiptProcessor/TestOutputs
 env
