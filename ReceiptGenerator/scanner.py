@@ -129,3 +129,6 @@ from scanner_utils import implt, resize, ratio
 
 
 # cv2.imwrite("data/textdet/%s.jpg" % IMG, cv2.cvtColor(newImage, cv2.COLOR_BGR2RGB))
+
+def scan():
+    pass

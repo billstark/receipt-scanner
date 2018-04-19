@@ -1,5 +1,6 @@
 import os
 import random
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 def rand_int_range(start, end):
@@ -59,25 +60,34 @@ def price_to_str(price, currency_mark, currency_side):
     return str(price) + currency_mark
 
 
+def padding(func):
+    def func_wrapper(*args, **kwargs):
+        text = func(*args, **kwargs)
+        n = len(text)
+        lack_left = (5 - n) / 2
+        lack_right = 5 - n - lack_left
+        (lack_left, lack_right) = (lack_left, lack_right) if random.randint(0, 1) else (lack_right, lack_left)
+        return lack_left * ' ' + text + lack_right * ' '
+    return func_wrapper
 
 
 def crnn_word():
-    max_length = 5
+    max_length = random.randint(1, 5)
     return ''.join([rand_crnn_char() for _ in range(max_length)])
 
 
 def crnn_word_column():
-    max_length = 4
+    max_length = random.randint(1, 4)
     return ''.join([rand_crnn_char() for _ in range(max_length)]) + ':'
 
 
 def crnn_word_bracket():
-    max_length = 4
+    max_length = random.randint(1, 4)
     return '(' + ''.join([rand_crnn_char() for _ in range(max_length)]) + ')'
 
 
 def crnn_int():
-    return str(rand_int_range(10000, 100000))
+    return str(rand_int_range(0, pow(10, random.randint(0, 5))))
 
 
 def crnn_float():
@@ -93,9 +103,10 @@ def crnn_price_right():
 
 
 def crnn_percentage():
-    return str(rand_price(0, 100)) + '%'
+    return str(rand_price(0, random.randint(0, 2))) + '%'
 
 
+@padding
 def crnn_line_text(typ):
     if typ == 'word':
         return crnn_word()
@@ -113,3 +124,31 @@ def crnn_line_text(typ):
         return crnn_price_right()
     elif typ == 'percentage':
         return crnn_percentage()
+
+
+def surrounded_text(text):
+    n = len(text)
+    top = ''.join([rand_crnn_char() for _ in range(n+2)])
+    bottom = ''.join([rand_crnn_char() for _ in range(n+2)])
+    left = rand_crnn_char()
+    right = rand_crnn_char()
+    surrounded = top + '\n' + left + text + right + '\n' + bottom
+    return surrounded
+
+
+def normalized_avg(numbers):
+    average = np.average(numbers)
+    variance = np.var(numbers)
+    if variance == 0:
+        return numbers[0], numbers[0]
+    n = len(numbers)
+    tolerance = 4 # Higher for more tolerance over outliers
+    filtered_numbers = []
+    while True:
+        filtered_numbers = [number for number in numbers if -tolerance <= (number - average) / np.sqrt(variance/n) <= tolerance]
+        if not filtered_numbers:
+            tolerance *= 1.5
+        else:
+            break
+
+    return (np.max(filtered_numbers), np.average(filtered_numbers))
