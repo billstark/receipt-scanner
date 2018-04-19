@@ -60,15 +60,21 @@ def cut_lines(image, for_crnn=True):
         x, y, w, h = cv2.boundingRect(ctr)
         bounding_boxes.append(BoundingBox((x, y, w, h)))
 
+    height, width, _ = image.shape
+    size_dilate_val = 5
     bounding_boxes = seperate_n_lines(bounding_boxes)
     lines = []
     boxes = []
     for bounding_box in bounding_boxes:
         x, y, w, h = bounding_box.x, bounding_box.y, bounding_box.w, bounding_box.h
-        line = image[y:y+h, x:x+w]
+        ny = max(y - size_dilate_val, 0)
+        ny2 = min(y + h + size_dilate_val, height)
+        nx = max(x - size_dilate_val, 0)
+        nx2 = min(x + w + size_dilate_val, width)
+        line = image[ny:ny2, nx:nx2]
         lines.append(line)
-        cv2.rectangle(labelled,(x,y),( x + w, y + h ),(90,0,255),2)
-        boxes.append((x, y, w, h))
+        cv2.rectangle(labelled, (nx, ny), (nx2, ny2), (90, 0, 255), 2)
+        boxes.append((nx, ny, nx2-nx, ny2-ny))
 
     return labelled, lines, boxes
 
