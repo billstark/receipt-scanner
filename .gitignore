@@ -1,6 +1,7 @@
 /CNNModel/trainingImages/*
 /CNNModel/image-data
 /CNNModel/saved-model
+/CRNNModel/logs
 /ReceiptProcessor/TestOutputs
 env
 *.pyc
