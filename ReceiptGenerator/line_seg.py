@@ -2,24 +2,11 @@ import cv2
 import numpy as np
 import os
 from bounding_box import BoundingBox
+from utils import normalized_avg
 
 def eval_line_height(bounding_boxes):
     heights = [box.h for box in bounding_boxes]
-    average = np.average(heights)
-    variance = np.var(heights)
-    if variance == 0:
-        return heights[0], heights[0]
-    n = len(heights)
-    tolerance = 4 # Higher for more tolerance over outliers
-    filtered_heights = []
-    while True:
-        filtered_heights = [height for height in heights if -tolerance <= (height - average) / np.sqrt(variance/n) <= tolerance]
-        if not filtered_heights:
-            tolerance *= 1.5
-        else:
-            break
-
-    return (np.max(filtered_heights), np.average(filtered_heights))
+    return normalized_avg(heights)
 
 
 def split_heights(bounding_boxes, evaled_avg_line_height):
@@ -84,3 +71,7 @@ def cut_lines(image, for_crnn=True):
         boxes.append((x, y, w, h))
 
     return labelled, lines, boxes
+
+# labelled, _, _ =cut_lines(cv2.imread('test.png'))
+# cv2.imshow('l', labelled)
+# cv2.waitKey(0)
