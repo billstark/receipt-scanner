@@ -4,7 +4,7 @@ from ReceiptGenerator.bounding_box import BoundingBox
 def cluster(data, maxgap, get_compare_val=None):
     if not get_compare_val:
         get_compare_val = lambda x: x
-    data.sort(key=get_compare_val)
+    data = sorted(data, key=get_compare_val)
     groups = [[data[0]]]
     for x in data[1:]:
         if abs(get_compare_val(x) - get_compare_val(groups[-1][-1])) <= maxgap:
@@ -23,7 +23,7 @@ def output_text(text_list, box_list):
     for line in text_box_tpl_clusters:
         sorted_word_tpls = sorted(line, key=lambda x: x[1][0])
         for word_tpl in sorted_word_tpls:
-            out_text += word_tpl[0]
+            out_text += word_tpl[0] + ' '
 
         out_text += '\n'
 

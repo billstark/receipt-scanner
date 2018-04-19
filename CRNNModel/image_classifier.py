@@ -8,9 +8,9 @@ try:
 except ImportError:
     pass
 
-from crnn_model import crnn_model
-from global_configuration import config
-from local_utils import log_utils, data_utils, image_utils
+from CRNNModel.crnn_model import crnn_model
+from CRNNModel.global_configuration import config
+from CRNNModel.local_utils import log_utils, data_utils, image_utils
 
 SCRIPT_PATH = ops.dirname(ops.abspath(__file__))
 DEFAULT_WEIGHTS_PATH = ops.join(SCRIPT_PATH, './shadownet/shadownet_2018-04-18-12-29-11.ckpt-19999')

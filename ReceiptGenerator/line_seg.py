@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 import os
-from bounding_box import BoundingBox
-from utils import normalized_avg
+from ReceiptGenerator.bounding_box import BoundingBox
+from ReceiptGenerator.utils import normalized_avg
 
 def eval_line_height(bounding_boxes):
     heights = [box.h for box in bounding_boxes]
@@ -28,7 +28,7 @@ def split_heights(bounding_boxes, evaled_avg_line_height):
 
 def seperate_n_lines(bounding_boxes):
     # Evaluate letter width
-    _, evaled_avg_line_height = eval_line_height(bounding_boxes)
+    evaled_avg_line_height, _ = eval_line_height(bounding_boxes)
 
     # split boxes of n times width of most boxes into n boxes
     bounding_boxes = split_heights(bounding_boxes, evaled_avg_line_height)
