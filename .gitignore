@@ -5,3 +5,6 @@
 env
 *.pyc
 ReceiptGenerator/results
+*.zip
+Test_sample.txt
+Train_sample.txt

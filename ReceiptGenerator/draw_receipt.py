@@ -76,14 +76,14 @@ def create_left_aligned_text(num_col, num_row):
     return '\n'.join(create_decor_text_lines(num_col, num_row))
 
 
-def draw_text(text, margin_hori, margin_vert, font_size=40):
+def detect_text_size(text, fnt):
     img = Image.new('RGBA', (1, 1), white_color_tpl())
     drawer = ImageDraw.Draw(img)
-    fnt = ImageFont.truetype(pick_resource('fonts'), font_size)
     textsize = drawer.textsize(text, font=fnt)
-    width = 2*margin_hori+textsize[0]
-    height = 2*margin_vert+textsize[1]
-    # img = Image.new('RGBA', (width, height), white_color_tpl())
+    return textsize
+
+
+def crop_paper_with_size(width, height):
     img = Image.open(pick_resource('paper-texture'), 'r')
     img_w, img_h = img.size
     scale = max((width * 1.0 / img_w), (height * 1.0 / img_h))
@@ -93,9 +93,34 @@ def draw_text(text, margin_hori, margin_vert, font_size=40):
     y = rand_int_range(0, img_h - height)
     img = img.crop((x, y, x + width, y + height))
     img = img.convert('RGBA')
+    return img
+
+
+def draw_text(text, margin_hori, margin_vert, font_size=40):
+    fnt = ImageFont.truetype(pick_resource('fonts'), font_size)
+    textsize = detect_text_size(text, fnt)
+    width = 2*margin_hori+textsize[0]
+    height = 2*margin_vert+textsize[1]
+    img = crop_paper_with_size(width, height)
     drawer = ImageDraw.Draw(img)
     drawer.text((margin_hori, margin_vert), text, font=fnt, fill=(0, 0, 0, 255))
     return img
+
+
+def draw_noised_text(text, font_size=32):
+    fnt = ImageFont.truetype(pick_resource('fonts'), font_size)
+    surrounded = surrounded_text(text)
+    textsize = detect_text_size(text, fnt)
+    surrounded_textsize = detect_text_size(surrounded, fnt)
+    width = surrounded_textsize[0]
+    height = surrounded_textsize[1]
+    img = crop_paper_with_size(width, height)
+    drawer = ImageDraw.Draw(img)
+    drawer.text((0, 0), surrounded, font=fnt, fill=(0, 0, 0, 255))
+    img = img.resize((int(0.9 * width * 100.0/textsize[0]), int(0.8 * height * 32.0/textsize[1])), Image.ANTIALIAS)
+    return img
+
+
 
 
 def add_img_to_canvas(path, dest):
@@ -326,6 +351,37 @@ def create_crnn_sample(typ):
     return img, text
 
 
+def create_noised_crnn_sample(count_each):
+    types = ['word', 'word_column', 'word_bracket', 'int', 'float', 'price_left', 'price_right', 'percentage']
+    root_directory = 'results_test/'
+    for typ in types:
+        for i in range(count_each):
+            directory = 'results_test/{}_{}/'.format(typ, i)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            text = crnn_line_text(typ)
+            img = draw_noised_text(text)
+            img.save(directory + 'image.png')
+            pipeline = Augmentor.Pipeline(directory)
+            pipeline.random_distortion(probability=1, grid_width=8, grid_height=8, magnitude=1)
+            pipeline.sample(1)
+            out_dir = directory + 'output/'
+            distorted = Image.open(out_dir + [x for x in os.listdir(out_dir) if 'png' in x][0], 'r')
+            blurred = distorted.filter(ImageFilter.GaussianBlur(radius=random.choice(range(2))))
+            w, h = blurred.size
+            final_img = blurred.crop(((w - 100)/2, (h - 32)/2, (w + 100)/2, (h + 32)/2))
+            im_path = root_directory + '{}.png'.format(random.randint(0, 100000000))
+            while os.path.exists(im_path):
+                im_path = root_directory + '{}.png'.format(random.randint(0, 100000000))
+            final_img.save(im_path)
+            label_f = open(root_directory + 'sample.txt', 'a')
+            label_f.write(im_path.split('/')[1] + ' ' + text.strip() + '\n')
+            label_f.close()
+            shutil.rmtree(directory)
+
+
+
+
 def create_sample(count):
     for i in range(count):
         draw_receipt_with_letter_boxes(debug=True)
@@ -345,4 +401,4 @@ if len(sys.argv) > 1:
         if count < 1:
             print('Invalid parameter')
         else:
-            create_crnn_sample('word')
+            create_noised_crnn_sample(count)
