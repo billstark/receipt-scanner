@@ -13,9 +13,9 @@ from CRNNModel.global_configuration import config
 from CRNNModel.local_utils import log_utils, data_utils, image_utils
 
 SCRIPT_PATH = ops.dirname(ops.abspath(__file__))
-DEFAULT_WEIGHTS_PATH = ops.join(SCRIPT_PATH, './shadownet/shadownet_2018-04-18-12-29-11.ckpt-19999')
+DEFAULT_WEIGHTS_PATH = ops.join(SCRIPT_PATH, './shadownet/shadownet_2018-04-19-14-32-11.ckpt-9999')
 INPUT_NAME = 'input'
-NUMBER_OF_CLASSES = 61
+NUMBER_OF_CLASSES = 71
 
 class Classifier:
 
