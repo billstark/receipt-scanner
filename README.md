@@ -8,6 +8,7 @@ A machine learning implementation of OCR
 > ### Installation:
 > Clone Repository  
 > `git clone https://github.com/billstark/receipt-scanner`  
+>  
 > In repository root directory:  
 > `pip install -r requirements.txt`
 
