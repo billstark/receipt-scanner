@@ -66,7 +66,7 @@ def cut_lines(image, for_crnn=True):
     boxes = []
     for bounding_box in bounding_boxes:
         x, y, w, h = bounding_box.x, bounding_box.y, bounding_box.w, bounding_box.h
-        size_dilate_val = int(h / 10)
+        size_dilate_val = int(h / 7)
         ny = max(y - size_dilate_val, 0)
         ny2 = min(y + h + size_dilate_val, height)
         nx = max(x - size_dilate_val, 0)
