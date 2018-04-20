@@ -1,4 +1,4 @@
-# receipt-scanner
+# CRNN Receipt Scanner
 A machine learning implementation of OCR  
 [Our project report](project_report.pdf)
 
