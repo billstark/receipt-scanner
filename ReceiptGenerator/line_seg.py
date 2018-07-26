@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 import os
-from ReceiptGenerator.bounding_box import BoundingBox
-from ReceiptGenerator.utils import normalized_avg
+from bounding_box import BoundingBox
+from utils import normalized_avg
 
 def eval_line_height(bounding_boxes):
     heights = [box.h for box in bounding_boxes]
