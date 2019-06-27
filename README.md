@@ -1,13 +1,14 @@
 # CRNN Receipt Scanner
 A machine learning implementation of OCR  
-[Our project report](project_report.pdf)
+[Project report of original authors](project_report.pdf)
 
 > ### Development Environment
-> Python 3.5
+> Python 3+
 
 > ### Installation:
 > Clone Repository  
-> `git clone https://github.com/billstark/receipt-scanner`  
+> original: `git clone https://github.com/billstark/receipt-scanner`
+> modified: `git clone https://github.com/sandeepkundala/receipt-scanner`
 >  
 > In repository root directory:  
 > `pip install -r requirements.txt`
