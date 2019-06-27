@@ -22,15 +22,15 @@ def shadow_tpl():
 
 
 def pick_resource(path):
-    _path = 'ReceiptGenerator/resources/' + path
+    _path = 'resources/' + path
     items = [x for x in os.listdir(_path) if '.DS_Store' not in x]
     result = _path + '/' + random.choice(items)
     return result
 
 
 def rand_char():
-    special_chars = ['-', '_']
-    return random.choice([chr(x) for x in range(ord('a'), ord('z')+1)] + special_chars)
+    special_chars = ['-', '_',',','/','|','(',')','&','!','#','XX']
+    return random.choice([chr(x) for x in range(ord('a'), ord('z')+1)] + special_chars +[chr(x) for x in range(ord('0'), ord('9')+1)])
 
 
 def rand_seq(uppercase_policy='upper', max_length=40):
@@ -46,8 +46,8 @@ def rand_seq(uppercase_policy='upper', max_length=40):
     return seq
 
 def rand_crnn_char():
-    special_chars = ['-', '_']
-    return random.choice([chr(x) for x in range(ord('a'), ord('z')+1)] + special_chars + [chr(x) for x in range(ord('A'), ord('Z')+1)])
+    special_chars = ['-', '_','!','@','#','$','%','^','&','*','(',')',' ','XX','?','<',',','>','.',';','/',':','\'','{','}','[',']','=','+','|','~',' ']
+    return random.choice([chr(x) for x in range(ord('a'), ord('z')+1)] + special_chars + [chr(x) for x in range(ord('A'), ord('Z')+1)]+[chr(x) for x in range(ord('0'), ord('9')+1)])
 
 
 def rand_price(start=0, end=10000):
@@ -67,13 +67,18 @@ def padding(func):
         lack_left = (5 - n) / 2
         lack_right = 5 - n - lack_left
         (lack_left, lack_right) = (lack_left, lack_right) if random.randint(0, 1) else (lack_right, lack_left)
-        return lack_left * ' ' + text + lack_right * ' '
+        return int(lack_left) * ' ' + text + int(lack_right) * ' '
     return func_wrapper
 
 
 def crnn_word():
     max_length = random.randint(1, 5)
     return ''.join([rand_crnn_char() for _ in range(max_length)])
+
+def crnn_line():
+    max_length = random.randint(15, 25)
+    return ''.join([rand_crnn_char() for _ in range(max_length)])
+
 
 
 def crnn_word_column():
@@ -124,6 +129,8 @@ def crnn_line_text(typ):
         return crnn_price_right()
     elif typ == 'percentage':
         return crnn_percentage()
+    elif typ =='line':
+        return crnn_line()
 
 
 def surrounded_text(text):
