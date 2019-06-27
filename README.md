@@ -8,6 +8,7 @@ A machine learning implementation of OCR
 > ### Installation:
 > Clone Repository  
 > original: `git clone https://github.com/billstark/receipt-scanner`
+>
 > modified: `git clone https://github.com/sandeepkundala/receipt-scanner`
 >  
 > In repository root directory:  
