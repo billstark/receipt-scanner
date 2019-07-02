@@ -1,7 +1,30 @@
 import os
 import random
 import numpy as np
+import datetime
+import time
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
+
+
+def strTimeProp(start, end, format, prop):
+    """Get a time at a proportion of a range of two formatted times.
+
+    start and end should be strings specifying times formated in the
+    given format (strftime-style), giving an interval [start, end].
+    prop specifies how a proportion of the interval to be taken after
+    start.  The returned time will be in the specified format.
+    """
+
+    stime = time.mktime(time.strptime(start, format))
+    etime = time.mktime(time.strptime(end, format))
+
+    ptime = stime + prop * (etime - stime)
+
+    return time.strftime(format, time.localtime(ptime))
+
+
+def randomDate(start, end, prop):
+    return strTimeProp(start, end, '%m/%d/%Y %I:%M %p', prop)
 
 def rand_int_range(start, end):
     return random.randint(int(start), int(end))
@@ -79,6 +102,9 @@ def crnn_line():
     max_length = random.randint(15, 25)
     return ''.join([rand_crnn_char() for _ in range(max_length)])
 
+def crnn_date():
+    return randomDate("1/1/1980 12:00 AM", "7/1/2019 11:59 PM", random.random())
+
 
 
 def crnn_word_column():
@@ -131,15 +157,18 @@ def crnn_line_text(typ):
         return crnn_percentage()
     elif typ =='line':
         return crnn_line()
+    elif typ =='date':
+        return crnn_date()
 
 
 def surrounded_text(text):
     n = len(text)
-    top = ''.join([rand_crnn_char() for _ in range(n+2)])
-    bottom = ''.join([rand_crnn_char() for _ in range(n+2)])
+    top = ''.join([rand_crnn_char() for _ in range(n)])
+    bottom = ''.join([rand_crnn_char() for _ in range(n)])
     left = rand_crnn_char()
     right = rand_crnn_char()
-    surrounded = top + '\n' + left + text + right + '\n' + bottom
+    surrounded = top + '\n' + text + '\n' + bottom
+    print(surrounded)
     return surrounded
 
 
