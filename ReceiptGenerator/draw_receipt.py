@@ -127,7 +127,7 @@ def draw_text(text, margin_hori, margin_vert, font_size=50):
     drawer.text((margin_hori, margin_vert), text, font=fnt, fill=(0, 0, 0, 255))
     return img
 
-
+import matplotlib.pyplot as plt
 def draw_noised_text(text, font_size=50):
     fnt = ImageFont.truetype(pick_resource('fonts'), font_size)
     surrounded = surrounded_text(text)
@@ -138,7 +138,9 @@ def draw_noised_text(text, font_size=50):
     img = crop_paper_with_size(width, height)
     drawer = ImageDraw.Draw(img)
     drawer.text((0, 0), surrounded, font=fnt, fill=(0, 0, 0, 255))
-    img = img.resize((int(width * 300.0/textsize[0]), int(height * 30.0/textsize[1])), Image.ANTIALIAS)
+    img = img.resize((int(0.9 * width * 100.0/textsize[0]), int(0.8 * height * 32.0/textsize[1])), Image.ANTIALIAS)
+    fig = plt.figure()
+    plt.imshow(img)
     return img
 
 
@@ -325,7 +327,6 @@ def draw_receipt_with_letter_boxes(debug=False):
 
     return img, letter_boxes
 
-
 def scan_receipt(filename=None, debug=False):
     if not filename:
         return draw_receipt_with_letter_boxes(debug=False)
@@ -353,7 +354,6 @@ def scan_receipt(filename=None, debug=False):
 
     return scanned, letter_boxes
 
-
 def create_crnn_sample(typ):
     # typ
     # 'word'                A_b-c
@@ -370,9 +370,8 @@ def create_crnn_sample(typ):
     img = cv2.resize(img, (100, 32), interpolation = cv2.INTER_CUBIC)
     return img, text
 
-
 def create_noised_crnn_sample(count_each):
-    types = ['word', 'word_column', 'word_bracket', 'int', 'float', 'price_left', 'price_right', 'percentage','line']
+    types = ['line', 'date', 'word', 'word_column', 'word_bracket', 'int', 'float', 'price_left', 'price_right', 'percentage']
     root_directory = 'results_test/'
     for typ in types:
         for i in range(count_each):
@@ -399,14 +398,10 @@ def create_noised_crnn_sample(count_each):
             label_f.close()
             shutil.rmtree(directory)
 
-
-
-
 def create_sample(count):
     for i in range(count):
         draw_receipt_with_letter_boxes()
         print('{} more job(s) remain'.format(count - i - 1))
-
 
 if len(sys.argv) > 1:
     if sys.argv[1] == 'clear':
@@ -422,4 +417,4 @@ if len(sys.argv) > 1:
             print('Invalid parameter')
         else:
             create_noised_crnn_sample(count)
-            create_sample(count)
+            #create_sample(count)
