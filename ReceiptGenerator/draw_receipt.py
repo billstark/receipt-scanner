@@ -132,13 +132,13 @@ def draw_noised_text(text, font_size=50):
     fnt = ImageFont.truetype(pick_resource('fonts'), font_size)
     surrounded = surrounded_text(text)
     textsize = detect_text_size(text, fnt)
-    surrounded_textsize = detect_text_size(surrounded, fnt)
+    surrounded_textsize = detect_text_size(text, fnt)
     width = surrounded_textsize[0]
     height = surrounded_textsize[1]
     img = crop_paper_with_size(width, height)
     drawer = ImageDraw.Draw(img)
-    drawer.text((0, 0), surrounded, font=fnt, fill=(0, 0, 0, 255))
-    img = img.resize((int(0.9 * width * 100.0/textsize[0]), int(0.8 * height * 32.0/textsize[1])), Image.ANTIALIAS)
+    drawer.text((0, 0), text, font=fnt, fill=(0, 0, 0, 255))
+    img = img.resize((int(width * 500.0/textsize[0]), int(height * 32.0/textsize[1])), Image.ANTIALIAS)
     fig = plt.figure()
     plt.imshow(img)
     return img
@@ -327,6 +327,7 @@ def draw_receipt_with_letter_boxes(debug=False):
 
     return img, letter_boxes
 
+
 def scan_receipt(filename=None, debug=False):
     if not filename:
         return draw_receipt_with_letter_boxes(debug=False)
@@ -354,6 +355,7 @@ def scan_receipt(filename=None, debug=False):
 
     return scanned, letter_boxes
 
+
 def create_crnn_sample(typ):
     # typ
     # 'word'                A_b-c
@@ -367,15 +369,16 @@ def create_crnn_sample(typ):
     text = crnn_line_text(typ)
     img = draw_text(text, 0, 0, font_size=32)
     img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-    img = cv2.resize(img, (100, 32), interpolation = cv2.INTER_CUBIC)
+    img = cv2.resize(img, (300, 40), interpolation = cv2.INTER_CUBIC)
     return img, text
+
 
 def create_noised_crnn_sample(count_each):
     types = ['line', 'date', 'word', 'word_column', 'word_bracket', 'int', 'float', 'price_left', 'price_right', 'percentage']
-    root_directory = 'results_test/'
+    root_directory = 'results_test2/'
     for typ in types:
         for i in range(count_each):
-            directory = 'results_test/{}_{}/'.format(typ, i)
+            directory = 'results_test2/{}_{}/'.format(typ, i)
             if not os.path.exists(directory):
                 os.makedirs(directory)
             text = crnn_line_text(typ)
@@ -398,10 +401,14 @@ def create_noised_crnn_sample(count_each):
             label_f.close()
             shutil.rmtree(directory)
 
+
+
+
 def create_sample(count):
     for i in range(count):
         draw_receipt_with_letter_boxes()
         print('{} more job(s) remain'.format(count - i - 1))
+
 
 if len(sys.argv) > 1:
     if sys.argv[1] == 'clear':
