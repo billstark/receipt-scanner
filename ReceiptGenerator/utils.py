@@ -99,7 +99,7 @@ def crnn_word():
     return ''.join([rand_crnn_char() for _ in range(max_length)])
 
 def crnn_line():
-    max_length = random.randint(15, 25)
+    max_length = random.randint(5, 15)
     return ''.join([rand_crnn_char() for _ in range(max_length)])
 
 def crnn_date():
@@ -163,11 +163,11 @@ def crnn_line_text(typ):
 
 def surrounded_text(text):
     n = len(text)
-    top = ''.join([rand_crnn_char() for _ in range(n)])
-    bottom = ''.join([rand_crnn_char() for _ in range(n)])
+    top = ''.join([' ' for _ in range(n)])
+    bottom = ''.join(['rand_crnn_char()' for _ in range(n)])
     left = rand_crnn_char()
     right = rand_crnn_char()
-    surrounded = top + '\n' + text + '\n' + bottom
+    surrounded = top+ '\n' + text + '\n' + bottom
     print(surrounded)
     return surrounded
 
