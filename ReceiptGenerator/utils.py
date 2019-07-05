@@ -95,25 +95,23 @@ def padding(func):
 
 
 def crnn_word():
-    max_length = random.randint(1, 5)
+    max_length = random.randint(1, 10)
     return ''.join([rand_crnn_char() for _ in range(max_length)])
 
 def crnn_line():
-    max_length = random.randint(5, 15)
+    max_length = random.randint(25, 40)
     return ''.join([rand_crnn_char() for _ in range(max_length)])
 
 def crnn_date():
     return randomDate("1/1/1980 12:00 AM", "7/1/2019 11:59 PM", random.random())
 
-
-
 def crnn_word_column():
-    max_length = random.randint(1, 4)
+    max_length = random.randint(1, 15)
     return ''.join([rand_crnn_char() for _ in range(max_length)]) + ':'
 
 
 def crnn_word_bracket():
-    max_length = random.randint(1, 4)
+    max_length = random.randint(1, 10)
     return '(' + ''.join([rand_crnn_char() for _ in range(max_length)]) + ')'
 
 
@@ -135,6 +133,38 @@ def crnn_price_right():
 
 def crnn_percentage():
     return str(rand_price(0, random.randint(0, 2))) + '%'
+
+def crnn_items_prices_left():
+    max_length_word = random.randint(4, 20)
+
+    return ''.join([rand_crnn_char() for _ in range(max_length_word)]) + ' '  + str(crnn_price_left())
+
+def crnn_items_prices_right():
+    max_length_word = random.randint(4, 20)
+    max_length_spaces = random.randint(10,20)
+    return ''.join([rand_crnn_char() for _ in range(max_length_word)]) + ' '  + str(crnn_price_right())
+
+def crnn_tot_left():
+    tots = ['Total', 'TOTAL', 'TOT', 'DUE', 'AMOUNT', 'BALANCE', 'Due', 'Amount','Balance']
+    sep = [':','-',' ']
+    return tots[random.randint(0,len(tots)-1)]+sep[random.randint(0,len(sep)-1)]+str(crnn_price_left())
+
+def crnn_tot_right():
+    tots = ['Total', 'TOTAL', 'TOT', 'DUE', 'AMOUNT', 'BALANCE', 'Due', 'Amount','Balance']
+    sep = [':','-',' ']
+    return tots[random.randint(0,len(tots)-1)]+sep[random.randint(0,len(sep)-1)]+str(crnn_price_right())
+
+def crnn_tax():
+    tax = random.choice(['Service Tax', 'Tax', 'Sales Tax', 'Federal Tax', 'State Tax'])
+    sep = random.choice([':','-',' '])
+    case = random.choice(['U','L','N'])
+    val = random.choice([str(crnn_price_left()), str(crnn_percentage()),str(crnn_price_right())])
+    if case == 'U':
+        return str(tax).upper() + str(sep) + str(val)
+    elif case == 'L':
+        return str(tax).lower() + str(sep) + str(val)
+    else:
+        return str(tax) + str(sep) + str(val)
 
 
 @padding
@@ -159,6 +189,16 @@ def crnn_line_text(typ):
         return crnn_line()
     elif typ =='date':
         return crnn_date()
+    elif typ =='tax':
+        return crnn_tax()
+    elif typ == 'totR':
+        return crnn_tot_right()
+    elif typ == 'totL':
+        return crnn_tot_left()
+    elif typ == 'priceR':
+        return crnn_items_prices_right()
+    elif typ == 'priceL':
+        return crnn_items_prices_left()
 
 
 def surrounded_text(text):
@@ -168,7 +208,7 @@ def surrounded_text(text):
     left = rand_crnn_char()
     right = rand_crnn_char()
     surrounded = top+ '\n' + text + '\n' + bottom
-    print(surrounded)
+    #print(surrounded)
     return surrounded
 
 
