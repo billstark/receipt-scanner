@@ -9,13 +9,13 @@
 > In terminal, in ReceiptGenerator directory:
 
 
-> `python run.py {N}`  
+> `python draw_receipt.py {N}`  
 > Creates N sample receipt sets.  
 > Example:  
-> `python run.py 3`
+> `python draw_receipt.py 3`
 
 
-> `python run.py clear`  
+> `python draw_receipt.py clear`  
 > Clears the whole result folder.  
 > Example:  
-> `python run.py clear`
+> `python draw_receipt.py clear`
