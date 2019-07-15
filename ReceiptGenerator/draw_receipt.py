@@ -16,22 +16,43 @@ from line_seg import cut_lines
 from letter_cutter import cut_letters
 
 
+def strTimeProp(start, end, format, prop):
+    """Get a time at a proportion of a range of two formatted times.
+
+    start and end should be strings specifying times formated in the
+    given format (strftime-style), giving an interval [start, end].
+    prop specifies how a proportion of the interval to be taken after
+    start.  The returned time will be in the specified format.
+    """
+
+    stime = time.mktime(time.strptime(start, format))
+    etime = time.mktime(time.strptime(end, format))
+
+    ptime = stime + prop * (etime - stime)
+
+    return time.strftime(format, time.localtime(ptime))
+
+
+def randomDate(start, end, prop):
+    return strTimeProp(start, end, '%m/%d/%Y %I:%M %p', prop)
+
+
 def create_config():
     config = {
-        'seperator': random.choice(['-', '_', '*', '.']),
-        'num_col': random.choice(range(20, 50)),
+        'seperator': random.choice(['-', '_', '*', '.',',',' ','/',':']),
+        'num_col': random.choice(range(20, 100)),
         'item_space_count': random.choice(range(1, 4)),
-        'break_long_words': random.choice([True, False, False, False]),
+        'break_long_words': random.choice([True, True, False, False]),
         'has_table_header': random.choice([True, False]),
         'distort_val': random.choice(range(2, 3)),
         'margin_hori': random.choice(range(40, 80)),
-        'margin_vert': random.choice(range(40, 200)),
+        'margin_vert': random.choice(range(40, 100)),
         'dist_name_price': random.choice(range(2, 6)),
         'item_name_uppercase_policy': random.choice(['upper', 'title']),
         'currency_mark': random.choice(['$']),
         'currency_side': random.choice(['left', 'right']),
         'price_min': random.choice(range(0, 10)),
-        'price_max': random.choice(range(10, 10000)),
+        'price_max': random.choice(range(10, 100000)),
         'num_row_prefix': random.choice(range(3, 6)),
         'num_row_prefix_2': random.choice(range(0, 5)),
         'num_row_suffix': random.choice(range(0, 4)),
@@ -45,7 +66,7 @@ def item_to_text(item, num_col, dist_name_price, break_long_words):
     name = item['name']
     price = item['price_str']
     qty = item['qty']
-    space_for_name = num_col - len(price) - dist_name_price - 4 # 4 for QTY
+    space_for_name = num_col - len(price) - dist_name_price # 4 for QTY
     wrapper = textwrap.TextWrapper(width=space_for_name, break_long_words=break_long_words, replace_whitespace=False)
     lines = wrapper.wrap(name)
     lines = ['    ' + line for line in lines]
@@ -96,7 +117,7 @@ def crop_paper_with_size(width, height):
     return img
 
 
-def draw_text(text, margin_hori, margin_vert, font_size=40):
+def draw_text(text, margin_hori, margin_vert, font_size=50):
     fnt = ImageFont.truetype(pick_resource('fonts'), font_size)
     textsize = detect_text_size(text, fnt)
     width = 2*margin_hori+textsize[0]
@@ -106,21 +127,21 @@ def draw_text(text, margin_hori, margin_vert, font_size=40):
     drawer.text((margin_hori, margin_vert), text, font=fnt, fill=(0, 0, 0, 255))
     return img
 
-
-def draw_noised_text(text, font_size=32):
+import matplotlib.pyplot as plt
+def draw_noised_text(text, font_size=50):
     fnt = ImageFont.truetype(pick_resource('fonts'), font_size)
     surrounded = surrounded_text(text)
     textsize = detect_text_size(text, fnt)
-    surrounded_textsize = detect_text_size(surrounded, fnt)
+    surrounded_textsize = detect_text_size(text, fnt)
     width = surrounded_textsize[0]
     height = surrounded_textsize[1]
     img = crop_paper_with_size(width, height)
     drawer = ImageDraw.Draw(img)
-    drawer.text((0, 0), surrounded, font=fnt, fill=(0, 0, 0, 255))
-    img = img.resize((int(0.9 * width * 100.0/textsize[0]), int(0.8 * height * 32.0/textsize[1])), Image.ANTIALIAS)
+    drawer.text((0, 0), text, font=fnt, fill=(0, 0, 0, 255))
+    img = img.resize((int(width * 500.0/textsize[0]), int(height * 32.0/textsize[1])), Image.ANTIALIAS)
+    fig = plt.figure()
+    plt.imshow(img)
     return img
-
-
 
 
 def add_img_to_canvas(path, dest):
@@ -205,7 +226,7 @@ def draw_receipt_with_letter_boxes(debug=False):
     currency_side = config['currency_side']
     price_min = config['price_min']
     price_max = config['price_max']
-    # distort_val = config['distort_val']
+    distort_val = config['distort_val']
     num_row_prefix = config['num_row_prefix']
     num_row_prefix_2 = config['num_row_prefix_2']
     num_row_suffix = config['num_row_suffix']
@@ -226,12 +247,13 @@ def draw_receipt_with_letter_boxes(debug=False):
 
     # add decorators
     prefix = create_centered_text(num_col, num_row_prefix)
+    date = randomDate("1/1/1980 12:00 AM", "7/1/2019 11:59 PM", random.random())
     prefix_2 = create_left_aligned_text(num_col, num_row_prefix_2)
     suffix = create_left_aligned_text(num_col, num_row_suffix)
     suffix_2 = create_centered_text(num_col, num_row_suffix_2)
 
     large_space = item_space * 2
-    text = prefix + large_space + prefix_2 + large_space + text + large_space + suffix + large_space + suffix_2
+    text = prefix + large_space + date + large_space + prefix_2 + large_space + text + large_space + suffix + large_space + suffix_2
     set_id = 'item_' + str(int(round(time.time() * 1000)))
     directory = 'results/{}'.format(set_id)
     if not os.path.exists(directory):
@@ -347,12 +369,12 @@ def create_crnn_sample(typ):
     text = crnn_line_text(typ)
     img = draw_text(text, 0, 0, font_size=32)
     img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-    img = cv2.resize(img, (100, 32), interpolation = cv2.INTER_CUBIC)
+    img = cv2.resize(img, (300, 40), interpolation = cv2.INTER_CUBIC)
     return img, text
 
 
 def create_noised_crnn_sample(count_each):
-    types = ['word', 'word_column', 'word_bracket', 'int', 'float', 'price_left', 'price_right', 'percentage']
+    types = ['line', 'date' , 'word', 'word_column', 'word_bracket', 'tax', 'priceL','priceR','totL','totR','price_left','price_right','percentage','float','int']
     root_directory = 'results_test/'
     for typ in types:
         for i in range(count_each):
@@ -363,13 +385,13 @@ def create_noised_crnn_sample(count_each):
             img = draw_noised_text(text)
             img.save(directory + 'image.png')
             pipeline = Augmentor.Pipeline(directory)
-            pipeline.random_distortion(probability=1, grid_width=8, grid_height=8, magnitude=1)
+            pipeline.random_distortion(probability=1, grid_width=16, grid_height=16, magnitude=1)
             pipeline.sample(1)
             out_dir = directory + 'output/'
             distorted = Image.open(out_dir + [x for x in os.listdir(out_dir) if 'png' in x][0], 'r')
             blurred = distorted.filter(ImageFilter.GaussianBlur(radius=random.choice(range(2))))
             w, h = blurred.size
-            final_img = blurred.crop(((w - 100)/2, (h - 32)/2, (w + 100)/2, (h + 32)/2))
+            final_img = blurred.crop(((w - 500)/2, (h - 32)/2, (w + 500)/2, (h + 32)/2))
             im_path = root_directory + '{}.png'.format(random.randint(0, 100000000))
             while os.path.exists(im_path):
                 im_path = root_directory + '{}.png'.format(random.randint(0, 100000000))
@@ -384,7 +406,7 @@ def create_noised_crnn_sample(count_each):
 
 def create_sample(count):
     for i in range(count):
-        draw_receipt_with_letter_boxes(debug=True)
+        draw_receipt_with_letter_boxes()
         print('{} more job(s) remain'.format(count - i - 1))
 
 
@@ -402,3 +424,4 @@ if len(sys.argv) > 1:
             print('Invalid parameter')
         else:
             create_noised_crnn_sample(count)
+            #create_sample(count)

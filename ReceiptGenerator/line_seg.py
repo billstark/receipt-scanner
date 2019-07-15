@@ -51,7 +51,7 @@ def cut_lines(image, for_crnn=True):
     img_dilation = cv2.dilate(thresh, kernel, iterations=1)
 
     # Find, sort contours
-    _, ctrs, _ = cv2.findContours(img_dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    ctrs, _ = cv2.findContours(img_dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     sorted_ctrs = sorted(ctrs, key=lambda ctr: cv2.boundingRect(ctr)[1])
 
     # Cut out lines

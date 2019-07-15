@@ -1,7 +1,30 @@
 import os
 import random
 import numpy as np
+import datetime
+import time
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
+
+
+def strTimeProp(start, end, format, prop):
+    """Get a time at a proportion of a range of two formatted times.
+
+    start and end should be strings specifying times formated in the
+    given format (strftime-style), giving an interval [start, end].
+    prop specifies how a proportion of the interval to be taken after
+    start.  The returned time will be in the specified format.
+    """
+
+    stime = time.mktime(time.strptime(start, format))
+    etime = time.mktime(time.strptime(end, format))
+
+    ptime = stime + prop * (etime - stime)
+
+    return time.strftime(format, time.localtime(ptime))
+
+
+def randomDate(start, end, prop):
+    return strTimeProp(start, end, '%m/%d/%Y %I:%M %p', prop)
 
 def rand_int_range(start, end):
     return random.randint(int(start), int(end))
@@ -22,15 +45,15 @@ def shadow_tpl():
 
 
 def pick_resource(path):
-    _path = 'ReceiptGenerator/resources/' + path
+    _path = 'resources/' + path
     items = [x for x in os.listdir(_path) if '.DS_Store' not in x]
     result = _path + '/' + random.choice(items)
     return result
 
 
 def rand_char():
-    special_chars = ['-', '_']
-    return random.choice([chr(x) for x in range(ord('a'), ord('z')+1)] + special_chars)
+    special_chars = ['-', '_',',','/','|','(',')','&','!','#','XX']
+    return random.choice([chr(x) for x in range(ord('a'), ord('z')+1)] + special_chars +[chr(x) for x in range(ord('0'), ord('9')+1)])
 
 
 def rand_seq(uppercase_policy='upper', max_length=40):
@@ -46,8 +69,8 @@ def rand_seq(uppercase_policy='upper', max_length=40):
     return seq
 
 def rand_crnn_char():
-    special_chars = ['-', '_']
-    return random.choice([chr(x) for x in range(ord('a'), ord('z')+1)] + special_chars + [chr(x) for x in range(ord('A'), ord('Z')+1)])
+    special_chars = ['-', '_','!','@','#','$','%','^','&','*','(',')',' ','XX','?','<',',','>','.',';','/',':','\'','{','}','[',']','=','+','|','~',' ']
+    return random.choice([chr(x) for x in range(ord('a'), ord('z')+1)] + special_chars + [chr(x) for x in range(ord('A'), ord('Z')+1)]+[chr(x) for x in range(ord('0'), ord('9')+1)])
 
 
 def rand_price(start=0, end=10000):
@@ -67,22 +90,28 @@ def padding(func):
         lack_left = (5 - n) / 2
         lack_right = 5 - n - lack_left
         (lack_left, lack_right) = (lack_left, lack_right) if random.randint(0, 1) else (lack_right, lack_left)
-        return lack_left * ' ' + text + lack_right * ' '
+        return int(lack_left) * ' ' + text + int(lack_right) * ' '
     return func_wrapper
 
 
 def crnn_word():
-    max_length = random.randint(1, 5)
+    max_length = random.randint(1, 10)
     return ''.join([rand_crnn_char() for _ in range(max_length)])
 
+def crnn_line():
+    max_length = random.randint(25, 40)
+    return ''.join([rand_crnn_char() for _ in range(max_length)])
+
+def crnn_date():
+    return randomDate("1/1/1980 12:00 AM", "7/1/2019 11:59 PM", random.random())
 
 def crnn_word_column():
-    max_length = random.randint(1, 4)
+    max_length = random.randint(1, 15)
     return ''.join([rand_crnn_char() for _ in range(max_length)]) + ':'
 
 
 def crnn_word_bracket():
-    max_length = random.randint(1, 4)
+    max_length = random.randint(1, 10)
     return '(' + ''.join([rand_crnn_char() for _ in range(max_length)]) + ')'
 
 
@@ -105,6 +134,38 @@ def crnn_price_right():
 def crnn_percentage():
     return str(rand_price(0, random.randint(0, 2))) + '%'
 
+def crnn_items_prices_left():
+    max_length_word = random.randint(4, 20)
+
+    return ''.join([rand_crnn_char() for _ in range(max_length_word)]) + ' '  + str(crnn_price_left())
+
+def crnn_items_prices_right():
+    max_length_word = random.randint(4, 20)
+    max_length_spaces = random.randint(10,20)
+    return ''.join([rand_crnn_char() for _ in range(max_length_word)]) + ' '  + str(crnn_price_right())
+
+def crnn_tot_left():
+    tots = ['Total', 'TOTAL', 'TOT', 'DUE', 'AMOUNT', 'BALANCE', 'Due', 'Amount','Balance']
+    sep = [':','-',' ']
+    return tots[random.randint(0,len(tots)-1)]+sep[random.randint(0,len(sep)-1)]+str(crnn_price_left())
+
+def crnn_tot_right():
+    tots = ['Total', 'TOTAL', 'TOT', 'DUE', 'AMOUNT', 'BALANCE', 'Due', 'Amount','Balance']
+    sep = [':','-',' ']
+    return tots[random.randint(0,len(tots)-1)]+sep[random.randint(0,len(sep)-1)]+str(crnn_price_right())
+
+def crnn_tax():
+    tax = random.choice(['Service Tax', 'Tax', 'Sales Tax', 'Federal Tax', 'State Tax'])
+    sep = random.choice([':','-',' '])
+    case = random.choice(['U','L','N'])
+    val = random.choice([str(crnn_price_left()), str(crnn_percentage()),str(crnn_price_right())])
+    if case == 'U':
+        return str(tax).upper() + str(sep) + str(val)
+    elif case == 'L':
+        return str(tax).lower() + str(sep) + str(val)
+    else:
+        return str(tax) + str(sep) + str(val)
+
 
 @padding
 def crnn_line_text(typ):
@@ -124,15 +185,30 @@ def crnn_line_text(typ):
         return crnn_price_right()
     elif typ == 'percentage':
         return crnn_percentage()
+    elif typ =='line':
+        return crnn_line()
+    elif typ =='date':
+        return crnn_date()
+    elif typ =='tax':
+        return crnn_tax()
+    elif typ == 'totR':
+        return crnn_tot_right()
+    elif typ == 'totL':
+        return crnn_tot_left()
+    elif typ == 'priceR':
+        return crnn_items_prices_right()
+    elif typ == 'priceL':
+        return crnn_items_prices_left()
 
 
 def surrounded_text(text):
     n = len(text)
-    top = ''.join([rand_crnn_char() for _ in range(n+2)])
-    bottom = ''.join([rand_crnn_char() for _ in range(n+2)])
+    top = ''.join([' ' for _ in range(n)])
+    bottom = ''.join(['rand_crnn_char()' for _ in range(n)])
     left = rand_crnn_char()
     right = rand_crnn_char()
-    surrounded = top + '\n' + left + text + right + '\n' + bottom
+    surrounded = top+ '\n' + text + '\n' + bottom
+    #print(surrounded)
     return surrounded
 
 

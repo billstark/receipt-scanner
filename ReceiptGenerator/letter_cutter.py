@@ -108,7 +108,7 @@ def cut_letters(image):
     # _, thresh = cv2.threshold(imgary, 127, 255, cv2.THRESH_BINARY)
 
     # Find contour
-    _, contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # Get bounding boxes
     bounding_box_vals = [cv2.boundingRect(contour) for contour in contours]
