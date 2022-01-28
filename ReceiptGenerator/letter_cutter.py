@@ -2,8 +2,8 @@ import numpy as np
 import cv2
 import os
 import sys
-from bounding_box import BoundingBox
-from utils import normalized_avg
+from ReceiptGenerator.bounding_box import BoundingBox
+from ReceiptGenerator.utils import normalized_avg
 
 def merge_bounding_boxes(bounding_boxes):
     # Algo to be improved for better performance
